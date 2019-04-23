@@ -11,6 +11,6 @@ This program is licensed under the terms of the GNU GPLv3.
 C. Liu <br />
 Beyond Pixels : Exploring New Representations and Applications for Motion Analysis <br />
 Massachusetts Institute of Technology <br />
-May 2009
+May 2009 <br />
 Correction for compilation under Ubuntu 16.04 LTS
 
