@@ -70,22 +70,14 @@
     source - optical flow
  */
 
-    int sv_dense_compute_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth ) {
+    int sv_dense_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth, DImage & sv_flow_u, DImage & sv_flow_v ) {
 
         /* image length variable */
         long sv_length( sv_width * sv_height * sv_depth );
 
         /* image variable */
         DImage sv_dimg_a;
-
-        /* image variable */
         DImage sv_dimg_b;
-
-        /* flow variable */
-        DImage sv_flow_u;
-
-        /* flow variable */
-        DImage sv_flow_v;
 
         /* image variable */
         DImage sv_warp;
@@ -110,18 +102,6 @@
 
         /* compute optical flow */
         OpticalFlow::Coarse2FineFlow( sv_flow_u, sv_flow_v, sv_warp, sv_dimg_a, sv_dimg_b, 0.012, 0.75, 20, 7, 1, 30 );
-
-        // DEBUG // CHECK //
-        std::fstream __stream; double * __p = sv_flow_u.pData;
-        __stream.open( "export_u.dat", std::ios::out );
-        for ( int __y( 0 ); __y < sv_height; __y ++ ) {
-        for ( int __x( 0 ); __x < sv_width ; __x ++ ) {
-            __stream << * __p << " "; ++__p;
-        }
-        __stream << std::endl;
-        }
-        __stream.close();
-        // DEBUG // CHECK //
 
         /* release image memory */
         sv_dimg_a.clear();
@@ -150,6 +130,10 @@
         long sv_img_height( 0 );
         long sv_img_depth ( 0 );
 
+        /* flow variable */
+        DImage sv_flow_u;
+        DImage sv_flow_v;
+
         /* check consistency */
         if ( argc != 4 ) {
 
@@ -175,8 +159,25 @@
         sv_dense_image_check( sv_img_prev, sv_img_width, sv_img_height, sv_img_depth );
         sv_dense_image_check( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
 
-        // DEBUG // testing //
-        sv_dense_compute_flow( sv_img_middle, sv_img_prev, sv_img_prev.cols, sv_img_prev.rows, sv_img_prev.channels() );
+        // DEBUG // TESTING //
+        sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_prev.cols, sv_img_prev.rows, sv_img_prev.channels(), sv_flow_u, sv_flow_v );
+        // DEBUG // TESTING //
+
+        // DEBUG // CHECK //
+        std::fstream __stream; double * __p = sv_flow_u.pData;
+        __stream.open( "export_u.dat", std::ios::out );
+        for ( int __y( 0 ); __y < sv_img_height; __y ++ ) {
+        for ( int __x( 0 ); __x < sv_img_width ; __x ++ ) {
+            __stream << * __p << " "; ++__p;
+        }
+        __stream << std::endl;
+        }
+        __stream.close();
+        // DEBUG // CHECK //
+
+        /* release flow memory */
+        sv_flow_u.clear();
+        sv_flow_v.clear();
 
         /* send message */
         return( 0 );

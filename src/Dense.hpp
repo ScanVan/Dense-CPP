@@ -77,7 +77,7 @@
 
     /* *** */
 
-    int sv_dense_compute_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth );
+    int sv_dense_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth, DImage & sv_flow_u, DImage & sv_flow_v );
 
     /*! \brief main function
      *
