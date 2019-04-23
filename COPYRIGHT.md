@@ -7,10 +7,10 @@ This program is licensed under the terms of the GNU GPLv3.
 
 ## Redistributed third-parties
 
-*   [Optical Flow Matlab/C++ Code](https://people.csail.mit.edu/celiu/OpticalFlow/)
-    C. Liu
-    Beyond Pixels : Exploring New Representations and Applications for Motion Analysis
-    Massachusetts Institute of Technology
+*   [Optical Flow Matlab/C++ Code](https://people.csail.mit.edu/celiu/OpticalFlow/) <br />
+    C. Liu <br />
+    Beyond Pixels : Exploring New Representations and Applications for Motion Analysis <br />
+    Massachusetts Institute of Technology <br />
     May 2009
 
 
