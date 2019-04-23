@@ -43,6 +43,7 @@
  */
 
     # include <iostream>
+    # include <fstream>
     # include <opencv2/core/core.hpp>
     # include <opencv2/highgui/highgui.hpp>
 
@@ -65,6 +66,14 @@
 /*
     header - function prototypes
  */
+
+    /* *** */
+
+    cv::Mat sv_dense_image_load( char const * const sv_image_path );
+
+    /* *** */
+
+    void sv_dense_image_check( cv::Mat const & sv_image, long const sv_width, long const sv_height, long const sv_depth );
 
     /* *** */
 

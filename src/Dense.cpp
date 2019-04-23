@@ -21,6 +21,52 @@
     # include "Dense.hpp"
 
 /*
+    source - image manipulation
+ */
+
+    cv::Mat sv_dense_image_load( char const * const sv_image_path ) {
+
+        /* matrix variable */
+        cv::Mat sv_image;
+
+        /* import and check image */
+        if ( ! ( sv_image = cv::imread( sv_image_path, CV_LOAD_IMAGE_COLOR ) ).data ) {
+
+            /* display message */
+            std::cerr << "scanvan : error : unable to import image" << std::endl;
+
+            /* send message */
+            exit( 1 );
+
+        }
+
+        /* convert image to double */
+        sv_image.convertTo( sv_image, CV_64FC3 );
+
+        /* image renormalisation */
+        sv_image /= 255.0;
+
+        /* return read image */
+        return( sv_image );
+
+    }
+
+    void sv_dense_image_check( cv::Mat const & sv_image, long const sv_width, long const sv_height, long const sv_depth ) {
+
+        /* check image */
+        if ( ( sv_width != sv_image.cols ) || ( sv_height != sv_image.rows ) || ( sv_depth != sv_image.channels() ) ) {
+
+            /* display message */
+            std::cerr << "scanvan : error : image size are different" << std::endl;
+
+            /* send message */
+            exit( 1 );
+
+        }
+
+    }
+
+/*
     source - optical flow
  */
 
@@ -65,6 +111,18 @@
         /* compute optical flow */
         OpticalFlow::Coarse2FineFlow( sv_flow_u, sv_flow_v, sv_warp, sv_dimg_a, sv_dimg_b, 0.012, 0.75, 20, 7, 1, 30 );
 
+        // DEBUG // CHECK //
+        std::fstream __stream; double * __p = sv_flow_u.pData;
+        __stream.open( "export_u.dat", std::ios::out );
+        for ( int __y( 0 ); __y < sv_height; __y ++ ) {
+        for ( int __x( 0 ); __x < sv_width ; __x ++ ) {
+            __stream << * __p << " "; ++__p;
+        }
+        __stream << std::endl;
+        }
+        __stream.close();
+        // DEBUG // CHECK //
+
         /* release image memory */
         sv_dimg_a.clear();
 
@@ -83,13 +141,14 @@
     int main( int argc, char ** argv ) {
 
         /* matrix variable */
-        cv::Mat sv_img_middle;
-
-        /* matrix variable */
         cv::Mat sv_img_prev;
-
-        /* matrix variable */
+        cv::Mat sv_img_middle;
         cv::Mat sv_img_next;
+
+        /* reference variable */
+        long sv_img_width ( 0 );
+        long sv_img_height( 0 );
+        long sv_img_depth ( 0 );
 
         /* check consistency */
         if ( argc != 4 ) {
@@ -102,56 +161,19 @@
 
         }
 
-        /* import and check image */
-        if ( ! ( sv_img_prev = cv::imread( argv[1], CV_LOAD_IMAGE_COLOR ) ).data ) {
+        /* import image */
+        sv_img_prev   = sv_dense_image_load( argv[1] );
+        sv_img_middle = sv_dense_image_load( argv[2] );
+        sv_img_next   = sv_dense_image_load( argv[3] );
 
-            /* display message */
-            std::cerr << "scanvan : error : unable to import image" << std::endl;
+        /* extract image reference */
+        sv_img_width  = sv_img_middle.cols;
+        sv_img_height = sv_img_middle.rows;
+        sv_img_depth  = sv_img_middle.channels();
 
-            /* send message */
-            return( 1 );
-
-        }
-
-        /* convert image matrix to double */
-        sv_img_prev.convertTo( sv_img_prev, CV_64FC3 );
-
-        /* image renormalisation */
-        sv_img_prev /= 255.0;
-
-        /* import and check image */
-        if ( ! ( sv_img_middle = cv::imread( argv[2], CV_LOAD_IMAGE_COLOR ) ).data ) {
-
-            /* display message */
-            std::cerr << "scanvan : error : unable to import image" << std::endl;
-
-            /* send message */
-            return( 1 );
-
-        }
-
-        /* convert image matrix to double */
-        sv_img_middle.convertTo( sv_img_middle, CV_64FC3 );
-
-        /* image renormalisation */
-        sv_img_middle /= 255.0;
-
-        /* import and check image */
-        if ( ! ( sv_img_next = cv::imread( argv[3], CV_LOAD_IMAGE_COLOR ) ).data ) {
-
-            /* display message */
-            std::cerr << "scanvan : error : unable to import image" << std::endl;
-
-            /* send message */
-            return( 1 );
-
-        }
-
-        /* convert image matrix to double */
-        sv_img_next.convertTo( sv_img_next, CV_64FC3 );
-
-        /* image renormalisation */
-        sv_img_next /= 255.0;
+        /* check image */
+        sv_dense_image_check( sv_img_prev, sv_img_width, sv_img_height, sv_img_depth );
+        sv_dense_image_check( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
 
         // DEBUG // testing //
         sv_dense_compute_flow( sv_img_middle, sv_img_prev, sv_img_prev.cols, sv_img_prev.rows, sv_img_prev.channels() );
@@ -160,3 +182,4 @@
         return( 0 );
 
     }
+
