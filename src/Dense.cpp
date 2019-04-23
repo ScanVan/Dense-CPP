@@ -71,6 +71,9 @@
         /* release image memory */
         sv_dimg_b.clear();
 
+        /* release image memory */
+        sv_warp.clear();
+
     }
 
 /*
@@ -151,7 +154,7 @@
         sv_img_next /= 255.0;
 
         // DEBUG // testing //
-        sv_dense_compute_flow( sv_img_prev, sv_img_middle, sv_img_prev.cols, sv_img_prev.rows, sv_img_prev.channels() );
+        sv_dense_compute_flow( sv_img_middle, sv_img_prev, sv_img_prev.cols, sv_img_prev.rows, sv_img_prev.channels() );
 
         /* send message */
         return( 0 );
