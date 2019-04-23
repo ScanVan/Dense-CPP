@@ -3,7 +3,7 @@ directory:
 	mkdir -p obj
 
 all:directory third
-	g++ src/Dense.cpp -o obj/Dense.o -c -O3 -std=c++11 -flto
+	g++ src/Dense.cpp -o obj/Dense.o -c -O3 -std=c++11 -flto -I ./third/
 	g++ obj/*.o -o bin/Dense `pkg-config --cflags --libs opencv` -flto
 
 third:directory

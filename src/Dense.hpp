@@ -35,6 +35,9 @@
     header - internal includes
  */
 
+    # include "Image.h"
+    # include "OpticalFlow.h"
+
 /*
     header - external includes
  */
@@ -62,6 +65,10 @@
 /*
     header - function prototypes
  */
+
+    /* *** */
+
+    int sv_dense_compute_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth );
 
     /*! \brief main function
      *

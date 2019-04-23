@@ -43,7 +43,7 @@ public:
 	virtual inline void computeDimension(){nPixels=imWidth*imHeight;nElements=nPixels*nChannels;};
 
 	virtual void allocate(int width,int height,int nchannels=1);
-	
+
 	template <class T1>
 	void allocate(const Image<T1>& other);
 
@@ -83,6 +83,13 @@ public:
 	inline int nelements() const {return nElements;};
 	inline bool isDerivativeImage() const {return IsDerivativeImage;};
 	inline color_type colortype() const{return colorType;};
+	void setColorType(int colorVal) {
+	switch (colorVal) {
+	  case 1: colorType = GRAY; break;
+	  default: colorType = RGB;
+	}
+	return;
+	}
 
 	bool IsFloat () const;
 	bool IsEmpty() const {if(nElements==0) return true;else return false;};
@@ -321,7 +328,7 @@ public:
 	 // convert an image into visual words based on a dictionary
 	template <class T1,class T2>
 	void ConvertToVisualWords(Image<T1>& result,const T2* pDictionary,int nDim,int nVocabulary);
-	
+
 	// get the histogram of an image region
 	// the range is [0,imWidth] (x) and [0,imHeight] (y)
 	template <class T1>
@@ -503,7 +510,7 @@ void Image<T>::allocate(int width,int height,int nchannels)
 	nChannels=nchannels;
 	computeDimension();
 	pData=NULL;
-	
+
 	if(nElements>0)
 	{
 		pData=new T[nElements];
@@ -593,7 +600,7 @@ void Image<T>::copyData(const Image<T>& other)
 
 	if(nElements!=other.nElements)
 	{
-		nElements=other.nElements;		
+		nElements=other.nElements;
 		if(pData!=NULL)
 			delete []pData;
 		pData=NULL;
@@ -861,7 +868,7 @@ bool Image<T>::loadImage(ifstream& myfile)
 		allocate(width,height,nchannels);
 	myfile.read((char *)&IsDerivativeImage,sizeof(bool));
 	myfile.read((char *)pData,sizeof(T)*nElements);
-	
+
 	return true;
 }
 
@@ -905,12 +912,12 @@ bool Image<T>::imread(const char* filename)
 //}
 //
  //------------------------------------------------------------------------------------------
- // function to write the image 
+ // function to write the image
  //------------------------------------------------------------------------------------------
 template <class T>
 bool Image<T>::imwrite(const char* filename) const
 {
-	
+
 	ImageIO::ImageType type;
 	if(IsDerivativeImage)
 		type=ImageIO::derivative;
@@ -1017,7 +1024,7 @@ Image<T1> Image<T>::dy(bool IsAdvancedFilter) const
 }
 
 //------------------------------------------------------------------------------------------
-// function to compute the second order derivative 
+// function to compute the second order derivative
 //------------------------------------------------------------------------------------------
 template <class T>
 template <class T1>
@@ -1157,7 +1164,7 @@ void Image<T>::gradientmag(Image<T1> &image) const
 // function to do Gaussian smoothing
 //------------------------------------------------------------------------------------------
 template <class T>
-void Image<T>::GaussianSmoothing(double sigma,int fsize) 
+void Image<T>::GaussianSmoothing(double sigma,int fsize)
 {
 	Image<T> foo;
 	GaussianSmoothing(foo,sigma,fsize);
@@ -1168,7 +1175,7 @@ void Image<T>::GaussianSmoothing(double sigma,int fsize)
 
 template <class T>
 template <class T1>
-void Image<T>::GaussianSmoothing(Image<T1>& image,double sigma,int fsize) const 
+void Image<T>::GaussianSmoothing(Image<T1>& image,double sigma,int fsize) const
 {
 	Image<T1> foo;
 	// constructing the 1D gaussian filter
@@ -1195,7 +1202,7 @@ void Image<T>::GaussianSmoothing(Image<T1>& image,double sigma,int fsize) const
 //------------------------------------------------------------------------------------------
 template <class T>
 template <class T1>
-void Image<T>::GaussianSmoothing_transpose(Image<T1>& image,double sigma,int fsize) const 
+void Image<T>::GaussianSmoothing_transpose(Image<T1>& image,double sigma,int fsize) const
 {
 	Image<T1> foo;
 	// constructing the 1D gaussian filter
@@ -1226,7 +1233,7 @@ template <class T>
 template <class T1>
 void Image<T>::smoothing(Image<T1>& image,double factor)
 {
-	// build 
+	// build
 	double filter2D[9]={1,0,1,0, 0, 0,1, 0,1};
 	filter2D[1]=filter2D[3]=filter2D[5]=filter2D[7]=factor;
 	filter2D[4]=factor*factor;
@@ -1784,7 +1791,7 @@ void Image<T>::Add(const Image<T1>& image1,const Image<T2>& image2)
 	const T1*& pData1=image1.data();
 	const T2*& pData2=image2.data();
 	for(int i=0;i<nElements;i++)
-		pData[i]=pData1[i]+pData2[i];	
+		pData[i]=pData1[i]+pData2[i];
 }
 
 template <class T>
@@ -1802,7 +1809,7 @@ void Image<T>::Add(const Image<T1>& image1,const Image<T2>& image2,double ratio)
 	const T1*& pData1=image1.data();
 	const T2*& pData2=image2.data();
 	for(int i=0;i<nElements;i++)
-		pData[i]=pData1[i]+pData2[i]*ratio;	
+		pData[i]=pData1[i]+pData2[i]*ratio;
 }
 
 template <class T>
@@ -1816,7 +1823,7 @@ void Image<T>::Add(const Image<T1>& image1,const double ratio)
 	}
 	const T1*& pData1=image1.data();
 	for(int i=0;i<nElements;i++)
-		pData[i]+=pData1[i]*ratio;	
+		pData[i]+=pData1[i]*ratio;
 }
 
 template <class T>
@@ -1830,7 +1837,7 @@ void Image<T>::Add(const Image<T1>& image1)
 	}
 	const T1*& pData1=image1.data();
 	for(int i=0;i<nElements;i++)
-		pData[i]+=pData1[i];	
+		pData[i]+=pData1[i];
 }
 
 template <class T>
@@ -2148,7 +2155,7 @@ void Image<T>::ConvertToVisualWords(Image<T1> &result, const T2 *pDictionary, in
 	}
 	if(result.matchDimension(imWidth,imHeight,1))
 		result.allocate(imWidth,imHeight);
-	
+
 	bool isFloat = IsFloat();
 	for(int i = 0;i<nPixels;i++)
 	{
@@ -2209,8 +2216,8 @@ Vector<T1> Image<T>::histogramRegion(int nBins,double left,double top,double rig
 					weight *= dTop;
 				if(i==Bottom)
 					weight *= dBottom;
-			}			
-			
+			}
+
 			if(Left==Right)
 				weight *= (dLeft+dRight-1);
 			else
@@ -2299,7 +2306,7 @@ void Image<T>::warpImageBicubic(Image<T>& output,const Image<T1>& imdx,const Ima
 
 				// now use the coefficients for interpolation
 				output.pData[offset*nChannels+k] = a[0][0] +          a[0][1]*dy +          a[0][2]*dy2 +           a[0][3]*dy3+
-					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 + 
+					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 +
 																						a[2][0]*dx2 + a[2][1]*dx2*dy + a[2][2]*dx2*dy2 + a[2][3]*dx2*dy3+
 																						a[3][0]*dx3 + a[3][1]*dx3*dy + a[3][2]*dx3*dy2 + a[3][3]*dx3*dy3;
 				//output.pData[offset*nChannels+k] = __max(__min(output.pData[offset*nChannels+k],ImgMax),0);
@@ -2361,7 +2368,7 @@ void Image<T>::warpImageBicubic(Image<T>& output,const Image<T1>& coeff,const Im
 
 				// now use the coefficients for interpolation
 				output.pData[offset*nChannels+k] = a[0][0] +          a[0][1]*dy +          a[0][2]*dy2 +           a[0][3]*dy3+
-					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 + 
+					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 +
 																						a[2][0]*dx2 + a[2][1]*dx2*dy + a[2][2]*dx2*dy2 + a[2][3]*dx2*dy3+
 																						a[3][0]*dx3 + a[3][1]*dx3*dy + a[3][2]*dx3*dy2 + a[3][3]*dx3*dy3;
 				//output.pData[offset*nChannels+k] = __max(__min(output.pData[offset*nChannels+k],ImgMax),0);
@@ -2558,7 +2565,7 @@ void Image<T>::warpImageBicubicRef(const Image<T>& ref,Image<T>& output,const Im
 
 				// now use the coefficients for interpolation
 				output.pData[offset*nChannels+k] = a[0][0] +          a[0][1]*dy +          a[0][2]*dy2 +           a[0][3]*dy3+
-					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 + 
+					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 +
 																						a[2][0]*dx2 + a[2][1]*dx2*dy + a[2][2]*dx2*dy2 + a[2][3]*dx2*dy3+
 																						a[3][0]*dx3 + a[3][1]*dx3*dy + a[3][2]*dx3*dy2 + a[3][3]*dx3*dy3;
 				//output.pData[offset*nChannels+k] = __max(__min(output.pData[offset*nChannels+k],ImgMax),0);
@@ -2626,7 +2633,7 @@ void Image<T>::warpImageBicubicRef(const Image<T>& ref,Image<T>& output,const Im
 
 				// now use the coefficients for interpolation
 				output.pData[offset*nChannels+k] = a[0][0] +          a[0][1]*dy +          a[0][2]*dy2 +           a[0][3]*dy3+
-					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 + 
+					                                                                    a[1][0]*dx +   a[1][1]*dx*dy   + a[1][2]*dx*dy2   + a[1][3]*dx*dy3 +
 																						a[2][0]*dx2 + a[2][1]*dx2*dy + a[2][2]*dx2*dy2 + a[2][3]*dx2*dy3+
 																						a[3][0]*dx3 + a[3][1]*dx3*dy + a[3][2]*dx3*dy2 + a[3][3]*dx3*dy3;
 				//output.pData[offset*nChannels+k] = __max(__min(output.pData[offset*nChannels+k],ImgMax),0);
