@@ -51,6 +51,9 @@
     header - preprocessor definitions
  */
 
+    /* define mathematical constants */
+    # define SV_PI ( 3.14159265358979323846264338327950288419716939937510L )
+
 /*
     header - preprocessor macros
  */
@@ -63,9 +66,21 @@
     header - structures
  */
 
+    typedef struct sv_point_struct {
+
+        double x;
+        double y;
+        double z;
+
+    } sv_point;
+
 /*
     header - function prototypes
  */
+
+    /* *** */
+
+    sv_point sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta );
 
     /* *** */
 
@@ -78,6 +93,10 @@
     /* *** */
 
     int sv_dense_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth, DImage & sv_flow_u, DImage & sv_flow_v );
+
+    /* *** */
+
+    void sv_match_compute( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < sv_point > & sv_mat_1, std::vector < sv_point > & sv_mat_2, std::vector < sv_point > & sv_mat_3 );
 
     /*! \brief main function
      *
