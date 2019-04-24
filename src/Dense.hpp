@@ -67,21 +67,17 @@
     header - structures
  */
 
-    typedef struct sv_point_struct {
-
-        double x;
-        double y;
-        double z;
-
-    } sv_point;
-
 /*
     header - function prototypes
  */
 
     /* *** */
 
-    sv_point sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta );
+    Eigen::Vector3d sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta );
+
+    /* *** */
+
+    void sv_convert_to_first_frame( std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, Eigen::Vector3d & sv_cen_1, Eigen::Vector3d & sv_cen_2, Eigen::Vector3d & sv_cen_3, Eigen::Matrix3d const & sv_r12, Eigen::Vector3d const & sv_t12, Eigen::Matrix3d const & sv_r23, Eigen::Vector3d const & sv_t23 );
 
     /* *** */
 
@@ -101,7 +97,7 @@
 
     /* *** */
 
-    void sv_match_compute( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < sv_point > & sv_mat_1, std::vector < sv_point > & sv_mat_2, std::vector < sv_point > & sv_mat_3 );
+    void sv_match_compute( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 );
 
     /*! \brief main function
      *

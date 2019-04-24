@@ -24,10 +24,10 @@
     source - conversion operation
  */
 
-    sv_point sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta ) {
+    Eigen::Vector3d sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta ) {
 
         /* returned structure variable */
-        sv_point sv_return;
+        Eigen::Vector3d sv_return;
 
         /* coordinates re-normalisation */
         sv_phi = ( ( sv_phi - 1 ) / sv_width ) * 2.0 * SV_PI;
@@ -36,12 +36,36 @@
         sv_theta = ( ( sv_theta / sv_height ) - 0.5 ) * SV_PI;
 
         /* compute cartesian coordinates */
-        sv_return.x = cos( sv_theta ) * cos( sv_phi );
-        sv_return.y = cos( sv_theta ) * sin( sv_phi );
-        sv_return.z = sin( sv_theta );
+        sv_return(0) = cos( sv_theta ) * cos( sv_phi );
+        sv_return(1) = cos( sv_theta ) * sin( sv_phi );
+        sv_return(2) = sin( sv_theta );
 
         /* return converted coordinates */
         return( sv_return );
+
+    }
+
+    void sv_convert_to_first_frame( std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, Eigen::Vector3d & sv_cen_1, Eigen::Vector3d & sv_cen_2, Eigen::Vector3d & sv_cen_3, Eigen::Matrix3d const & sv_r12, Eigen::Vector3d const & sv_t12, Eigen::Matrix3d const & sv_r23, Eigen::Vector3d const & sv_t23 ) {
+
+        /* parsing directions vectors */
+        for ( long sv_parse( 0 ); sv_parse < sv_mat_1.size(); sv_parse ++ ) {
+
+            /* compute direction - middle camera */
+            sv_mat_2[sv_parse] = sv_r12.transpose() * sv_mat_2[sv_parse];
+
+            /* compute direction - last camera */
+            sv_mat_3[sv_parse] = sv_r12.transpose() * ( sv_r23.transpose() * sv_mat_3[sv_parse] );
+
+        }
+
+        /* compute center - first camera */
+        sv_cen_1 = Eigen::Vector3d::Zero();
+
+        /* compute center - middle camera */
+        sv_cen_2 = sv_r12.transpose() * sv_t12;
+
+        /* compute center - last camera */
+        sv_cen_3 = sv_cen_2 - ( sv_r12.transpose() * sv_r23.transpose() ) * sv_t23;
 
     }
 
@@ -198,7 +222,7 @@
     source - matches
  */
 
-    void sv_match_compute( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < sv_point > & sv_mat_1, std::vector < sv_point > & sv_mat_2, std::vector < sv_point > & sv_mat_3 ) {
+    void sv_match_compute( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 ) {
 
         /* parsing pointer variable */
         double * sv_p_21_u( sv_flow_21_u.pData );
@@ -262,9 +286,9 @@
         DImage sv_flow_23_v;
 
         /* matches variable */
-        std::vector < sv_point > sv_mat_1;
-        std::vector < sv_point > sv_mat_2;
-        std::vector < sv_point > sv_mat_3;
+        std::vector < Eigen::Vector3d > sv_mat_1;
+        std::vector < Eigen::Vector3d > sv_mat_2;
+        std::vector < Eigen::Vector3d > sv_mat_3;
 
         /* estimation parameters */
         Eigen::Matrix3d sv_r12;
@@ -285,8 +309,6 @@
 
         /* import estimation parameters */
         sv_estimation_load( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
-
-        return( 0 );
 
         /* import image */
         sv_img_prev   = sv_dense_image_load( argv[1] );
