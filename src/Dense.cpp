@@ -46,6 +46,61 @@
     }
 
 /*
+    source - estimation importation
+ */
+
+    void sv_estimation_load( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23 ) {
+
+        /* reading matrix variable */
+        Eigen::VectorXd sv_read( 24 );
+
+        /* stream variable */
+        std::fstream sv_stream;
+
+        /* create stream */
+        sv_stream.open( sv_estimation_path, std::ios::in );
+
+        /* check stream */
+        if ( sv_stream.is_open() == false ) {
+
+            /* display message */
+            std::cerr << "scanvan : error : unable to import estimation" << std::endl;
+
+            /* send message */
+            exit( 1 );
+
+        }
+
+        /* import estimation parameter */
+        for ( long sv_count( 0 ); sv_count < 24; sv_count ++ ) {
+
+            /* import token */
+            sv_stream >> sv_read(sv_count);
+
+        }
+
+        /* delete input stream */
+        sv_stream.close();
+
+        /* compose estimation matrix */
+        sv_r12(0,0) = sv_read( 0); sv_r12(0,1) = sv_read( 1); sv_r12(0,2) = sv_read( 2);
+        sv_r12(1,0) = sv_read( 8); sv_r12(1,1) = sv_read( 9); sv_r12(1,2) = sv_read(10);
+        sv_r12(2,0) = sv_read(16); sv_r12(2,1) = sv_read(17); sv_r12(2,2) = sv_read(18);
+
+        /* compose estimation matrix */
+        sv_r23(0,0) = sv_read( 4); sv_r23(0,1) = sv_read( 5); sv_r23(0,2) = sv_read( 6);
+        sv_r23(1,0) = sv_read(12); sv_r23(1,1) = sv_read(13); sv_r23(1,2) = sv_read(14);
+        sv_r23(2,0) = sv_read(20); sv_r23(2,1) = sv_read(21); sv_r23(2,2) = sv_read(22);
+
+        /* compose translation vector */
+        sv_t12(0) = sv_read( 3); sv_t12(1) = sv_read(11); sv_t12(2) = sv_read(19);
+
+        /* compose translation vector */
+        sv_t23(0) = sv_read( 7); sv_t23(1) = sv_read(15); sv_t23(2) = sv_read(23);
+
+    }
+
+/*
     source - image manipulation
  */
 
@@ -211,9 +266,14 @@
         std::vector < sv_point > sv_mat_2;
         std::vector < sv_point > sv_mat_3;
 
+        /* estimation parameters */
+        Eigen::Matrix3d sv_r12;
+        Eigen::Matrix3d sv_r23;
+        Eigen::Vector3d sv_t12;
+        Eigen::Vector3d sv_t23;
 
         /* check consistency */
-        if ( argc != 4 ) {
+        if ( argc != 5 ) {
 
             /* display message */
             std::cerr << "scanvan : error : wrong usage" << std::endl;
@@ -222,6 +282,11 @@
             return( 1 );
 
         }
+
+        /* import estimation parameters */
+        sv_estimation_load( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
+
+        return( 0 );
 
         /* import image */
         sv_img_prev   = sv_dense_image_load( argv[1] );

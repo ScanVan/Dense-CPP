@@ -46,6 +46,7 @@
     # include <fstream>
     # include <opencv2/core/core.hpp>
     # include <opencv2/highgui/highgui.hpp>
+    # include <Eigen/Dense>
 
 /*
     header - preprocessor definitions
@@ -81,6 +82,10 @@
     /* *** */
 
     sv_point sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta );
+
+    /* *** */
+
+    void sv_estimation_load( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23 );
 
     /* *** */
 
