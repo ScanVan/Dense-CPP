@@ -188,13 +188,16 @@
 
     }
 
-    cv::Mat sv_dense_io_image( char const * const sv_path ) {
+    cv::Mat sv_dense_io_image( char const * const sv_path, double const sv_scale ) {
+
+        /* matrix variable */
+        cv::Mat sv_import;
 
         /* matrix variable */
         cv::Mat sv_image;
 
         /* import and check image */
-        if ( ! ( sv_image = cv::imread( sv_path, cv::IMREAD_COLOR ) ).data ) {
+        if ( ! ( sv_import = cv::imread( sv_path, cv::IMREAD_COLOR ) ).data ) {
 
             /* display message */
             std::cerr << "scanvan : error : unable to import image" << std::endl;
@@ -203,6 +206,9 @@
             exit( 1 );
 
         }
+
+        /* resize image */
+        cv::resize( sv_import, sv_image, cv::Size(), sv_scale, sv_scale, cv::INTER_AREA );
 
         /* convert image to double */
         sv_image.convertTo( sv_image, CV_64FC3 );
@@ -215,13 +221,16 @@
 
     }
 
-    cv::Mat sv_dense_io_mask( char const * const sv_path ) {
+    cv::Mat sv_dense_io_mask( char const * const sv_path, double const sv_scale ) {
+
+        /* matrix variable */
+        cv::Mat sv_import;
 
         /* matrix variable */
         cv::Mat sv_mask;
 
         /* import and check image */
-        if ( ! ( sv_mask = cv::imread( sv_path, cv::IMREAD_GRAYSCALE ) ).data ) {
+        if ( ! ( sv_import = cv::imread( sv_path, cv::IMREAD_GRAYSCALE ) ).data ) {
 
             /* display message */
             std::cerr << "scanvan : error : unable to import mask" << std::endl;
@@ -230,6 +239,9 @@
             exit( 1 );
 
         }
+
+        /* resize image */
+        cv::resize( sv_import, sv_mask, cv::Size(), sv_scale, sv_scale, cv::INTER_NEAREST );
 
         /* return imported image */
         return( sv_mask );
@@ -473,13 +485,13 @@
         std::vector < Eigen::Vector3i > sv_fcolor;
 
         /* check consistency */
-        if ( argc != 7 ) {
+        if ( argc != 8 ) {
 
             /* display message */
             std::cerr << "scanvan : error : wrong usage" << std::endl;
 
             /* display quick help */
-            std::cerr << "./Dense [image 1 path] [image 2 path] [image 3 path] [pose estimation file] [scene export path] [mask image path]" << std::endl;
+            std::cerr << "./Dense [image 1 path] [image 2 path] [image 3 path] [pose estimation file] [scene export path] [mask image path] [image scale]" << std::endl;
 
             /* send message */
             return( 1 );
@@ -490,9 +502,9 @@
         sv_dense_io_pose( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
 
         /* import image */
-        sv_img_prev   = sv_dense_io_image( argv[1] );
-        sv_img_middle = sv_dense_io_image( argv[2] );
-        sv_img_next   = sv_dense_io_image( argv[3] );
+        sv_img_prev   = sv_dense_io_image( argv[1], atof( argv[7] ) );
+        sv_img_middle = sv_dense_io_image( argv[2], atof( argv[7] ) );
+        sv_img_next   = sv_dense_io_image( argv[3], atof( argv[7] ) );
 
         /* extract image reference */
         sv_img_width  = sv_img_middle.cols;
@@ -504,7 +516,7 @@
         sv_dense_consistent_image( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
 
         /* import mask */
-        sv_mask = sv_dense_io_mask( argv[6] );
+        sv_mask = sv_dense_io_mask( argv[6], atof( argv[7] ) );
 
         /* compute optical flows : image 2 -> 1 */
         sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_width, sv_img_height, sv_img_depth, sv_flow_21_u, sv_flow_21_v );

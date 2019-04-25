@@ -46,6 +46,7 @@
     # include <fstream>
     # include <opencv2/core/core.hpp>
     # include <opencv2/highgui/highgui.hpp>
+    # include <opencv2/imgproc/imgproc.hpp>
     # include <Eigen/Dense>
 
 /*
@@ -93,11 +94,11 @@
 
     /* *** */
 
-    cv::Mat sv_dense_io_image( char const * const sv_image_path );
+    cv::Mat sv_dense_io_image( char const * const sv_path, double const sv_scale );
 
     /* *** */
 
-    cv::Mat sv_dense_io_mask( char const * const sv_path );
+    cv::Mat sv_dense_io_mask( char const * const sv_path, double const sv_scale );
 
     /* *** */
 
