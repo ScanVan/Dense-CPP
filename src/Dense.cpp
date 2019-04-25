@@ -62,7 +62,7 @@
         sv_cen_1 = Eigen::Vector3d::Zero();
 
         /* compute center - middle camera */
-        sv_cen_2 = sv_r12.transpose() * sv_t12;
+        sv_cen_2 = - sv_r12.transpose() * sv_t12;
 
         /* compute center - last camera */
         sv_cen_3 = sv_cen_2 - ( sv_r12.transpose() * sv_r23.transpose() ) * sv_t23;
