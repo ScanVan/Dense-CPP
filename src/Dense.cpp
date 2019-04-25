@@ -298,6 +298,28 @@
     }
 
 /*
+    source - scene computation
+ */
+
+    std::vector < Eigen::Vector3d > sv_dense_scene_compute( std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+
+        /* returned structure variable */
+        std::vector < Eigen::Vector3d > sv_scene;
+
+        /* parsing direction vectors */
+        for ( long sv_parse( 0 ); sv_parse < sv_mat_1.size(); sv_parse ++ ) {
+
+            /* compute and push optimised intersection */
+            sv_scene.push_back( sv_dense_optimise_intersect( sv_mat_1[sv_parse], sv_mat_2[sv_parse], sv_mat_3[sv_parse], sv_cen_1, sv_cen_2, sv_cen_3 ) );
+
+        }
+
+        /* return computed scene */
+        return( sv_scene );
+
+    }
+
+/*
     source - main function
  */
 
@@ -324,11 +346,19 @@
         std::vector < Eigen::Vector3d > sv_mat_2;
         std::vector < Eigen::Vector3d > sv_mat_3;
 
+        /* center variable */
+        Eigen::Vector3d sv_cen_1;
+        Eigen::Vector3d sv_cen_2;
+        Eigen::Vector3d sv_cen_3;
+
         /* estimation parameters */
         Eigen::Matrix3d sv_r12;
         Eigen::Matrix3d sv_r23;
         Eigen::Vector3d sv_t12;
         Eigen::Vector3d sv_t23;
+
+        /* scene variable */
+        std::vector < Eigen::Vector3d > sv_scene;
 
         /* check consistency */
         if ( argc != 5 ) {
@@ -366,6 +396,12 @@
 
         /* compute matches */
         sv_match_compute( sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3 );
+
+        /* compute common frame - aligned on first camera */
+        sv_convert_to_first_frame( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
+
+        /* compute scene */
+        sv_scene = sv_dense_scene_compute( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
     // DEBUG // CHECK //
 # ifdef __DEBUG
