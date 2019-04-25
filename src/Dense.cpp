@@ -21,10 +21,10 @@
     # include "Dense.hpp"
 
 /*
-    source - conversion operation
+    source - geometric methods
  */
 
-    Eigen::Vector3d sv_convert_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta ) {
+    Eigen::Vector3d sv_dense_geometry_cartesian( long const sv_width, long const sv_height, double sv_phi, double sv_theta ) {
 
         /* returned structure variable */
         Eigen::Vector3d sv_return;
@@ -45,7 +45,7 @@
 
     }
 
-    void sv_convert_to_first_frame( std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, Eigen::Vector3d & sv_cen_1, Eigen::Vector3d & sv_cen_2, Eigen::Vector3d & sv_cen_3, Eigen::Matrix3d const & sv_r12, Eigen::Vector3d const & sv_t12, Eigen::Matrix3d const & sv_r23, Eigen::Vector3d const & sv_t23 ) {
+    void sv_dense_geometry_common( std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, Eigen::Vector3d & sv_cen_1, Eigen::Vector3d & sv_cen_2, Eigen::Vector3d & sv_cen_3, Eigen::Matrix3d const & sv_r12, Eigen::Vector3d const & sv_t12, Eigen::Matrix3d const & sv_r23, Eigen::Vector3d const & sv_t23 ) {
 
         /* parsing directions vectors */
         for ( long sv_parse( 0 ); sv_parse < sv_mat_1.size(); sv_parse ++ ) {
@@ -69,12 +69,7 @@
 
     }
 
-/*
-    source - optimisation methods
- */
-
-
-    Eigen::Vector3d sv_dense_optimise_intersect( Eigen::Vector3d const & sv_mat_1, Eigen::Vector3d const & sv_mat_2, Eigen::Vector3d const & sv_mat_3, Eigen::Vector3d  const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    Eigen::Vector3d sv_dense_geometry_intersect( Eigen::Vector3d const & sv_mat_1, Eigen::Vector3d const & sv_mat_2, Eigen::Vector3d const & sv_mat_3, Eigen::Vector3d  const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
 
         /* intermediate matrix */
         Eigen::Matrix3d sv_w1;
@@ -104,10 +99,10 @@
     }
 
 /*
-    source - estimation importation
+    source - i/o methods
  */
 
-    void sv_estimation_load( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23 ) {
+    void sv_dense_io_pose( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23 ) {
 
         /* reading matrix variable */
         Eigen::VectorXd sv_read( 24 );
@@ -158,11 +153,7 @@
 
     }
 
-/*
-    source - io methods
- */
-
-    void sv_dense_io_export_scene( char const * const sv_path, std::vector < Eigen::Vector3d > const & sv_scene ) {
+    void sv_dense_io_scene( char const * const sv_path, std::vector < Eigen::Vector3d > const & sv_scene ) {
 
         /* stream variable */
         std::fstream sv_stream;
@@ -194,11 +185,7 @@
 
     }
 
-/*
-    source - image manipulation
- */
-
-    cv::Mat sv_dense_image_load( char const * const sv_image_path ) {
+    cv::Mat sv_dense_io_image( char const * const sv_image_path ) {
 
         /* matrix variable */
         cv::Mat sv_image;
@@ -225,7 +212,11 @@
 
     }
 
-    void sv_dense_image_check( cv::Mat const & sv_image, long const sv_width, long const sv_height, long const sv_depth ) {
+/*
+    source - consistency methods
+ */
+
+    void sv_dense_consistent_image( cv::Mat const & sv_image, long const sv_width, long const sv_height, long const sv_depth ) {
 
         /* check image */
         if ( ( sv_width != sv_image.cols ) || ( sv_height != sv_image.rows ) || ( sv_depth != sv_image.channels() ) ) {
@@ -241,7 +232,7 @@
     }
 
 /*
-    source - optical flow
+    source - optical flow methods
  */
 
     int sv_dense_flow( cv::Mat & sv_img_a, cv::Mat & sv_img_b, long const sv_width, long const sv_height, long const sv_depth, DImage & sv_flow_u, DImage & sv_flow_v ) {
@@ -289,10 +280,10 @@
     }
 
 /*
-    source - matches
+    source - matching methods
  */
 
-    void sv_match_compute( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 ) {
+    void sv_dense_match( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 ) {
 
         /* parsing pointer variable */
         double * sv_p_21_u( sv_flow_21_u.pData );
@@ -312,13 +303,13 @@
             for( long sv_x( 0 ); sv_x < sv_width; sv_x ++ ) {
 
                 /* compute and assign match elements */
-                sv_mat_1.push_back( sv_convert_cartesian( sv_width, sv_height, sv_x + ( * sv_p_21_u ), sv_y + ( * sv_p_21_v ) ) );
+                sv_mat_1.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_21_u ), sv_y + ( * sv_p_21_v ) ) );
 
                 /* compute and assign match elements */
-                sv_mat_2.push_back( sv_convert_cartesian( sv_width, sv_height, sv_x, sv_y ) );
+                sv_mat_2.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x, sv_y ) );
 
                 /* compute and assign match elements */
-                sv_mat_3.push_back( sv_convert_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
+                sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
 
                 /* update pointers */
                 sv_p_21_u ++;
@@ -334,10 +325,10 @@
     }
 
 /*
-    source - scene computation
+    source - scene methods
  */
 
-    std::vector < Eigen::Vector3d > sv_dense_scene_compute( std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    std::vector < Eigen::Vector3d > sv_dense_scene( std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
 
         /* returned structure variable */
         std::vector < Eigen::Vector3d > sv_scene;
@@ -346,7 +337,7 @@
         for ( long sv_parse( 0 ); sv_parse < sv_mat_1.size(); sv_parse ++ ) {
 
             /* compute and push optimised intersection */
-            sv_scene.push_back( sv_dense_optimise_intersect( sv_mat_1[sv_parse], sv_mat_2[sv_parse], sv_mat_3[sv_parse], sv_cen_1, sv_cen_2, sv_cen_3 ) );
+            sv_scene.push_back( sv_dense_geometry_intersect( sv_mat_1[sv_parse], sv_mat_2[sv_parse], sv_mat_3[sv_parse], sv_cen_1, sv_cen_2, sv_cen_3 ) );
 
         }
 
@@ -408,12 +399,12 @@
         }
 
         /* import estimation parameters */
-        sv_estimation_load( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
+        sv_dense_io_pose( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
 
         /* import image */
-        sv_img_prev   = sv_dense_image_load( argv[1] );
-        sv_img_middle = sv_dense_image_load( argv[2] );
-        sv_img_next   = sv_dense_image_load( argv[3] );
+        sv_img_prev   = sv_dense_io_image( argv[1] );
+        sv_img_middle = sv_dense_io_image( argv[2] );
+        sv_img_next   = sv_dense_io_image( argv[3] );
 
         /* extract image reference */
         sv_img_width  = sv_img_middle.cols;
@@ -421,8 +412,8 @@
         sv_img_depth  = sv_img_middle.channels();
 
         /* check image */
-        sv_dense_image_check( sv_img_prev, sv_img_width, sv_img_height, sv_img_depth );
-        sv_dense_image_check( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
+        sv_dense_consistent_image( sv_img_prev, sv_img_width, sv_img_height, sv_img_depth );
+        sv_dense_consistent_image( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
 
         /* compute optical flows : image 2 -> 1 */
         sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_width, sv_img_height, sv_img_depth, sv_flow_21_u, sv_flow_21_v );
@@ -431,36 +422,16 @@
         sv_dense_flow( sv_img_middle, sv_img_next, sv_img_width, sv_img_height, sv_img_depth, sv_flow_23_u, sv_flow_23_v );
 
         /* compute matches */
-        sv_match_compute( sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3 );
+        sv_dense_match( sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3 );
 
         /* compute common frame - aligned on first camera */
-        sv_convert_to_first_frame( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
+        sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
 
         /* compute scene */
-        sv_scene = sv_dense_scene_compute( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
         /* export computed scene */
-        sv_dense_io_export_scene( argv[5], sv_scene );
-
-    // DEBUG // CHECK //
-# ifdef __DEBUG
-    std::fstream __stream; double * __p = sv_flow_u.pData;
-    __stream.open( "export_u.dat", std::ios::out );
-    for ( int __y( 0 ); __y < sv_img_height; __y ++ ) {
-    for ( int __x( 0 ); __x < sv_img_width ; __x ++ ) {
-        __stream << * __p << " "; ++__p;
-    }
-    __stream << std::endl;
-    }
-    __stream.close();
-    // DEBUG // CHECK //
-# endif
-
-        /* release flow memory */
-        sv_flow_21_u.clear();
-        sv_flow_21_v.clear();
-        sv_flow_23_u.clear();
-        sv_flow_23_v.clear();
+        sv_dense_io_scene( argv[5], sv_scene );
 
         /* send message */
         return( 0 );
