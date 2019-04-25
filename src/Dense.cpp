@@ -30,10 +30,10 @@
         Eigen::Vector3d sv_return;
 
         /* coordinates re-normalisation */
-        sv_phi = ( ( sv_phi - 1 ) / sv_width ) * 2.0 * SV_PI;
+        sv_phi = ( sv_phi / sv_width ) * 2.0 * SV_PI;
 
         /* coordinates re-normalisation */
-        sv_theta = ( ( sv_theta / sv_height ) - 0.5 ) * SV_PI;
+        sv_theta = ( ( sv_theta / ( sv_height - 1 ) ) - 0.5 ) * SV_PI;
 
         /* compute cartesian coordinates */
         sv_return(0) = cos( sv_theta ) * cos( sv_phi );
