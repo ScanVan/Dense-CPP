@@ -378,6 +378,52 @@
     }
 
 /*
+    source - filtering methods
+ */
+
+    void sv_dense_filter( double const sv_tol, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+
+        /* element radius variable */
+        double sv_rad_1( 0.0 );
+        double sv_rad_2( 0.0 );
+        double sv_rad_3( 0.0 );
+
+        /* element disparity variable */
+        double sv_disp_1( 0.0 );
+        double sv_disp_2( 0.0 );
+        double sv_disp_3( 0.0 );
+
+        /* parsing scene elements */
+        for ( long sv_parse( 0 ); sv_parse < sv_scene.size(); sv_parse ++ ) {
+
+            /* compute element radius */
+            sv_rad_1 = sv_mat_1[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_1 );
+            sv_rad_2 = sv_mat_2[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_2 );
+            sv_rad_3 = sv_mat_3[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_3 );
+
+            /* compute element disparity */
+            sv_disp_1 = ( sv_cen_1 + ( sv_rad_1 * sv_mat_1[sv_parse] ) - sv_scene[sv_parse] ).norm();
+            sv_disp_2 = ( sv_cen_2 + ( sv_rad_2 * sv_mat_2[sv_parse] ) - sv_scene[sv_parse] ).norm();
+            sv_disp_3 = ( sv_cen_3 + ( sv_rad_3 * sv_mat_3[sv_parse] ) - sv_scene[sv_parse] ).norm();
+
+            /* apply filtering condition */
+            if ( sv_disp_1 <= sv_tol )
+            if ( sv_disp_2 <= sv_tol )
+            if ( sv_disp_3 <= sv_tol ) {
+
+                /* element selection - position */
+                sv_fscene.push_back( sv_scene[sv_parse] );
+
+                /* element selection - color */
+                sv_fcolor.push_back( sv_color[sv_parse] );
+
+            }
+
+        }
+
+    }
+
+/*
     source - main function
  */
 
@@ -420,9 +466,11 @@
 
         /* scene variable */
         std::vector < Eigen::Vector3d > sv_scene;
+        std::vector < Eigen::Vector3d > sv_fscene;
 
         /* color variable */
         std::vector < Eigen::Vector3i > sv_color;
+        std::vector < Eigen::Vector3i > sv_fcolor;
 
         /* check consistency */
         if ( argc != 7 ) {
@@ -473,8 +521,11 @@
         /* compute scene */
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
+        /* filter scene */
+        sv_dense_filter( ( sv_t12.norm() + sv_t23.norm() ) / 50.0, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+
         /* export computed scene */
-        sv_dense_io_scene( argv[5], sv_scene, sv_color );
+        sv_dense_io_scene( argv[5], sv_fscene, sv_fcolor );
 
         /* send message */
         return( 0 );
