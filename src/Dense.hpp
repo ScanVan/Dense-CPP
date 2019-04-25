@@ -89,6 +89,10 @@
 
     /* *** */
 
+    void sv_dense_io_export_scene( char const * const sv_path, std::vector < Eigen::Vector3d > const & sv_scene );
+
+    /* *** */
+
     cv::Mat sv_dense_image_load( char const * const sv_image_path );
 
     /* *** */

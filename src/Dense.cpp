@@ -159,6 +159,42 @@
     }
 
 /*
+    source - io methods
+ */
+
+    void sv_dense_io_export_scene( char const * const sv_path, std::vector < Eigen::Vector3d > const & sv_scene ) {
+
+        /* stream variable */
+        std::fstream sv_stream;
+
+        /* create stream */
+        sv_stream.open( sv_path, std::ios::out );
+
+        /* check stream */
+        if ( sv_stream.is_open() == false ) {
+
+            /* display message */
+            std::cerr << "scanvan : error : unable to export scene" << std::endl;
+
+            /* send message */
+            exit( 1 );
+
+        }
+
+        /* parsing scene */
+        for ( long sv_parse( 0 ); sv_parse < sv_scene.size(); sv_parse ++ ) {
+
+            /* export scene point coordinates */
+            sv_stream << sv_scene[sv_parse](0) << " " << sv_scene[sv_parse](1) << " " << sv_scene[sv_parse](2) << std::endl;
+
+        }
+
+        /* close stream */
+        sv_stream.close();
+
+    }
+
+/*
     source - image manipulation
  */
 
@@ -361,7 +397,7 @@
         std::vector < Eigen::Vector3d > sv_scene;
 
         /* check consistency */
-        if ( argc != 5 ) {
+        if ( argc != 6 ) {
 
             /* display message */
             std::cerr << "scanvan : error : wrong usage" << std::endl;
@@ -402,6 +438,9 @@
 
         /* compute scene */
         sv_scene = sv_dense_scene_compute( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+
+        /* export computed scene */
+        sv_dense_io_export_scene( argv[5], sv_scene );
 
     // DEBUG // CHECK //
 # ifdef __DEBUG
