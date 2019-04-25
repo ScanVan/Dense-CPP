@@ -185,13 +185,13 @@
 
     }
 
-    cv::Mat sv_dense_io_image( char const * const sv_image_path ) {
+    cv::Mat sv_dense_io_image( char const * const sv_path ) {
 
         /* matrix variable */
         cv::Mat sv_image;
 
         /* import and check image */
-        if ( ! ( sv_image = cv::imread( sv_image_path, CV_LOAD_IMAGE_COLOR ) ).data ) {
+        if ( ! ( sv_image = cv::imread( sv_path, cv::IMREAD_COLOR ) ).data ) {
 
             /* display message */
             std::cerr << "scanvan : error : unable to import image" << std::endl;
@@ -209,6 +209,27 @@
 
         /* return read image */
         return( sv_image );
+
+    }
+
+    cv::Mat sv_dense_io_mask( char const * const sv_path ) {
+
+        /* matrix variable */
+        cv::Mat sv_mask;
+
+        /* import and check image */
+        if ( ! ( sv_mask = cv::imread( sv_path, cv::IMREAD_GRAYSCALE ) ).data ) {
+
+            /* display message */
+            std::cerr << "scanvan : error : unable to import mask" << std::endl;
+
+            /* send message */
+            exit( 1 );
+
+        }
+
+        /* return imported image */
+        return( sv_mask );
 
     }
 
@@ -268,22 +289,13 @@
         /* compute optical flow */
         OpticalFlow::Coarse2FineFlow( sv_flow_u, sv_flow_v, sv_warp, sv_dimg_a, sv_dimg_b, 0.012, 0.75, 20, 7, 1, 30 );
 
-        /* release image memory */
-        sv_dimg_a.clear();
-
-        /* release image memory */
-        sv_dimg_b.clear();
-
-        /* release image memory */
-        sv_warp.clear();
-
     }
 
 /*
     source - matching methods
  */
 
-    void sv_dense_match( long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 ) {
+    void sv_dense_match( cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 ) {
 
         /* parsing pointer variable */
         double * sv_p_21_u( sv_flow_21_u.pData );
@@ -302,14 +314,19 @@
             /* parsing central image pixels */
             for( long sv_x( 0 ); sv_x < sv_width; sv_x ++ ) {
 
-                /* compute and assign match elements */
-                sv_mat_1.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_21_u ), sv_y + ( * sv_p_21_v ) ) );
+                /* check mask value */
+                if ( sv_mask.at <uchar> ( sv_y, sv_x ) != 0 ) {
 
-                /* compute and assign match elements */
-                sv_mat_2.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x, sv_y ) );
+                    /* compute and assign match elements */
+                    sv_mat_1.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_21_u ), sv_y + ( * sv_p_21_v ) ) );
 
-                /* compute and assign match elements */
-                sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
+                    /* compute and assign match elements */
+                    sv_mat_2.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x, sv_y ) );
+
+                    /* compute and assign match elements */
+                    sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
+
+                }
 
                 /* update pointers */
                 sv_p_21_u ++;
@@ -357,6 +374,9 @@
         cv::Mat sv_img_middle;
         cv::Mat sv_img_next;
 
+        /* matrix variable */
+        cv::Mat sv_mask;
+
         /* reference variable */
         long sv_img_width ( 0 );
         long sv_img_height( 0 );
@@ -388,10 +408,13 @@
         std::vector < Eigen::Vector3d > sv_scene;
 
         /* check consistency */
-        if ( argc != 6 ) {
+        if ( argc != 7 ) {
 
             /* display message */
             std::cerr << "scanvan : error : wrong usage" << std::endl;
+
+            /* display quick help */
+            std::cerr << "./Dense [image 1 path] [image 2 path] [image 3 path] [pose estimation file] [scene export path] [mask image path]" << std::endl;
 
             /* send message */
             return( 1 );
@@ -415,6 +438,9 @@
         sv_dense_consistent_image( sv_img_prev, sv_img_width, sv_img_height, sv_img_depth );
         sv_dense_consistent_image( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
 
+        /* import mask */
+        sv_mask = sv_dense_io_mask( argv[6] );
+
         /* compute optical flows : image 2 -> 1 */
         sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_width, sv_img_height, sv_img_depth, sv_flow_21_u, sv_flow_21_v );
 
@@ -422,7 +448,7 @@
         sv_dense_flow( sv_img_middle, sv_img_next, sv_img_width, sv_img_height, sv_img_depth, sv_flow_23_u, sv_flow_23_v );
 
         /* compute matches */
-        sv_dense_match( sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3 );
+        sv_dense_match( sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3 );
 
         /* compute common frame - aligned on first camera */
         sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
