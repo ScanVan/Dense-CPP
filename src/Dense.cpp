@@ -153,7 +153,7 @@
 
     }
 
-    void sv_dense_io_scene( char const * const sv_path, std::vector < Eigen::Vector3d > const & sv_scene ) {
+    void sv_dense_io_scene( char const * const sv_path, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color ) {
 
         /* stream variable */
         std::fstream sv_stream;
@@ -176,7 +176,10 @@
         for ( long sv_parse( 0 ); sv_parse < sv_scene.size(); sv_parse ++ ) {
 
             /* export scene point coordinates */
-            sv_stream << sv_scene[sv_parse](0) << " " << sv_scene[sv_parse](1) << " " << sv_scene[sv_parse](2) << std::endl;
+            sv_stream << sv_scene[sv_parse](0) << " " << sv_scene[sv_parse](1) << " " << sv_scene[sv_parse](2) << " ";
+
+            /* export scene point color */
+            sv_stream << sv_color[sv_parse](0) << " " << sv_color[sv_parse](1) << " " << sv_color[sv_parse](2) << std::endl;
 
         }
 
@@ -295,7 +298,7 @@
     source - matching methods
  */
 
-    void sv_dense_match( cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3 ) {
+    void sv_dense_match( cv::Mat const & sv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3i > & sv_color ) {
 
         /* parsing pointer variable */
         double * sv_p_21_u( sv_flow_21_u.pData );
@@ -307,6 +310,9 @@
         sv_mat_1.clear();
         sv_mat_2.clear();
         sv_mat_3.clear();
+
+        /* color vector variable */
+        Eigen::Vector3i sv_pixel;
 
         /* parsing central image pixels */
         for ( long sv_y( 0 ); sv_y < sv_height; sv_y ++ ) {
@@ -325,6 +331,14 @@
 
                     /* compute and assign match elements */
                     sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
+
+                    /* compose color vector */
+                    sv_pixel(0) = sv_image.at <cv::Vec3d> ( sv_y, sv_x )[2] * 255.0;
+                    sv_pixel(1) = sv_image.at <cv::Vec3d> ( sv_y, sv_x )[1] * 255.0;
+                    sv_pixel(2) = sv_image.at <cv::Vec3d> ( sv_y, sv_x )[0] * 255.0;
+
+                    /* push color vector */
+                    sv_color.push_back( sv_pixel );
 
                 }
 
@@ -407,6 +421,9 @@
         /* scene variable */
         std::vector < Eigen::Vector3d > sv_scene;
 
+        /* color variable */
+        std::vector < Eigen::Vector3i > sv_color;
+
         /* check consistency */
         if ( argc != 7 ) {
 
@@ -448,7 +465,7 @@
         sv_dense_flow( sv_img_middle, sv_img_next, sv_img_width, sv_img_height, sv_img_depth, sv_flow_23_u, sv_flow_23_v );
 
         /* compute matches */
-        sv_dense_match( sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3 );
+        sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_color );
 
         /* compute common frame - aligned on first camera */
         sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
@@ -457,7 +474,7 @@
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
         /* export computed scene */
-        sv_dense_io_scene( argv[5], sv_scene );
+        sv_dense_io_scene( argv[5], sv_scene, sv_color );
 
         /* send message */
         return( 0 );
