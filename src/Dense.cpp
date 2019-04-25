@@ -70,6 +70,40 @@
     }
 
 /*
+    source - optimisation methods
+ */
+
+
+    Eigen::Vector3d sv_dense_optimise_intersect( Eigen::Vector3d const & sv_mat_1, Eigen::Vector3d const & sv_mat_2, Eigen::Vector3d const & sv_mat_3, Eigen::Vector3d  const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+
+        /* intermediate matrix */
+        Eigen::Matrix3d sv_w1;
+        Eigen::Matrix3d sv_w2;
+        Eigen::Matrix3d sv_w3;
+
+        /* intermediate vector */
+        Eigen::Vector3d sv_q1;
+        Eigen::Vector3d sv_q2;
+        Eigen::Vector3d sv_q3;
+
+        /* intermediate computation */
+        sv_w1 = Eigen::Matrix3d::Identity() - ( sv_mat_1 * sv_mat_1.transpose() );
+        sv_q1 = sv_w1 * sv_cen_1;
+
+        /* intermediate computation */
+        sv_w2 = Eigen::Matrix3d::Identity() - ( sv_mat_2 * sv_mat_2.transpose() );
+        sv_q2 = sv_w2 * sv_cen_2;
+
+        /* intermediate computation */
+        sv_w3 = Eigen::Matrix3d::Identity() - ( sv_mat_3 * sv_mat_3.transpose() );
+        sv_q3 = sv_w3 * sv_cen_3;
+
+        /* compute intersection */
+        return( ( ( sv_w1 + sv_w2 + sv_w3 ).inverse() ) * ( sv_q1 + sv_q2 + sv_q3 ) );
+
+    }
+
+/*
     source - estimation importation
  */
 
