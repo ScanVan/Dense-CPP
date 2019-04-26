@@ -513,7 +513,7 @@
         /* compute tolerence values */
         sv_tol = sv_t12.norm() + sv_t23.norm();
         sv_max = sv_tol * 50.0;
-        sv_tol = sv_tol / 50.0;
+        sv_tol = sv_tol / 75.0;
 
         /* import image */
         sv_img_prev   = sv_dense_io_image( argv[1], atof( argv[7] ) );
