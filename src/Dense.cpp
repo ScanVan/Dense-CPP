@@ -393,7 +393,7 @@
     source - filtering methods
  */
 
-    void sv_dense_filter( double const sv_tol, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    void sv_dense_filter( double const sv_tol, double const sv_max, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
 
         /* element radius variable */
         double sv_rad_1( 0.0 );
@@ -423,11 +423,16 @@
             if ( sv_disp_2 <= sv_tol )
             if ( sv_disp_3 <= sv_tol ) {
 
-                /* element selection - position */
-                sv_fscene.push_back( sv_scene[sv_parse] );
+                /* apply filtering condition */
+                if ( sv_rad_2 < sv_max ) {
 
-                /* element selection - color */
-                sv_fcolor.push_back( sv_color[sv_parse] );
+                    /* element selection - position */
+                    sv_fscene.push_back( sv_scene[sv_parse] );
+
+                    /* element selection - color */
+                    sv_fcolor.push_back( sv_color[sv_parse] );
+
+                }
 
             }
 
@@ -484,6 +489,10 @@
         std::vector < Eigen::Vector3i > sv_color;
         std::vector < Eigen::Vector3i > sv_fcolor;
 
+        /* filtering variable */
+        double sv_tol( 0.0 );
+        double sv_max( 0.0 );
+
         /* check consistency */
         if ( argc != 8 ) {
 
@@ -500,6 +509,11 @@
 
         /* import estimation parameters */
         sv_dense_io_pose( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
+
+        /* compute tolerence values */
+        sv_tol = sv_t12.norm() + sv_t23.norm();
+        sv_max = sv_tol * 50.0;
+        sv_tol = sv_tol / 50.0;
 
         /* import image */
         sv_img_prev   = sv_dense_io_image( argv[1], atof( argv[7] ) );
@@ -518,10 +532,10 @@
         /* import mask */
         sv_mask = sv_dense_io_mask( argv[6], atof( argv[7] ) );
 
-        /* compute optical flows : image 2 -> 1 */
+        /* compute optical flow : image 2 -> 1 */
         sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_width, sv_img_height, sv_img_depth, sv_flow_21_u, sv_flow_21_v );
 
-        /* compute optical flows : image 2 -> 3 */
+        /* compute optical flow : image 2 -> 3 */
         sv_dense_flow( sv_img_middle, sv_img_next, sv_img_width, sv_img_height, sv_img_depth, sv_flow_23_u, sv_flow_23_v );
 
         /* compute matches */
@@ -534,7 +548,7 @@
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
         /* filter scene */
-        sv_dense_filter( ( sv_t12.norm() + sv_t23.norm() ) / 50.0, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
         /* export computed scene */
         sv_dense_io_scene( argv[5], sv_fscene, sv_fcolor );
