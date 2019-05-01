@@ -405,6 +405,24 @@
         double sv_disp_2( 0.0 );
         double sv_disp_3( 0.0 );
 
+        // DEBUG // RESEARCH //
+        std::fstream _r1stream;
+        std::fstream _r2stream;
+        std::fstream _r3stream;
+
+        _r1stream.open( "r1-data.dat", std::ios::out );
+        _r2stream.open( "r2-data.dat", std::ios::out );
+        _r3stream.open( "r3-data.dat", std::ios::out );
+
+        std::fstream _d1stream;
+        std::fstream _d2stream;
+        std::fstream _d3stream;
+
+        _d1stream.open( "d1-data.dat", std::ios::out );
+        _d2stream.open( "d2-data.dat", std::ios::out );
+        _d3stream.open( "d3-data.dat", std::ios::out );
+        // DEBUG //
+
         /* parsing scene elements */
         for ( long sv_parse( 0 ); sv_parse < sv_scene.size(); sv_parse ++ ) {
 
@@ -417,6 +435,16 @@
             sv_disp_1 = ( sv_cen_1 + ( sv_rad_1 * sv_mat_1[sv_parse] ) - sv_scene[sv_parse] ).norm();
             sv_disp_2 = ( sv_cen_2 + ( sv_rad_2 * sv_mat_2[sv_parse] ) - sv_scene[sv_parse] ).norm();
             sv_disp_3 = ( sv_cen_3 + ( sv_rad_3 * sv_mat_3[sv_parse] ) - sv_scene[sv_parse] ).norm();
+
+            // DEBUG // RESEARCH //
+            _r1stream << sv_rad_1 << std::endl;
+            _r2stream << sv_rad_2 << std::endl;
+            _r3stream << sv_rad_3 << std::endl;
+
+            _d1stream << sv_disp_1 << std::endl;
+            _d2stream << sv_disp_2 << std::endl;
+            _d3stream << sv_disp_3 << std::endl;
+            // DEBUG //
 
             /* apply filtering condition */
             if ( sv_disp_1 <= sv_tol )
@@ -437,6 +465,16 @@
             }
 
         }
+
+        // DEBUG // RESEARCH //
+        _r1stream.close();
+        _r2stream.close();
+        _r3stream.close();
+
+        _d1stream.close();
+        _d2stream.close();
+        _d3stream.close();
+        // DEBUG //
 
     }
 
