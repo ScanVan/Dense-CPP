@@ -424,7 +424,7 @@
             if ( sv_disp_3 <= sv_tol ) {
 
                 /* apply filtering condition */
-                if ( sv_rad_2 < sv_max ) {
+                if ( ( sv_rad_2 > 0.0 ) && ( sv_rad_2 < sv_max ) ) {
 
                     /* element selection - position */
                     sv_fscene.push_back( sv_scene[sv_parse] );
