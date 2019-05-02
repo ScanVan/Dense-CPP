@@ -532,11 +532,26 @@
         /* import mask */
         sv_mask = sv_dense_io_mask( argv[6], atof( argv[7] ) );
 
+    # pragma omp parallel sections
+    {
+
+    # pragma omp section
+    {
+
         /* compute optical flow : image 2 -> 1 */
         sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_width, sv_img_height, sv_img_depth, sv_flow_21_u, sv_flow_21_v );
 
+    }
+
+    # pragma omp section
+    {
+
         /* compute optical flow : image 2 -> 3 */
         sv_dense_flow( sv_img_middle, sv_img_next, sv_img_width, sv_img_height, sv_img_depth, sv_flow_23_u, sv_flow_23_v );
+
+    }
+
+    } /* parallel sections */
 
         /* compute matches */
         sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_color );
