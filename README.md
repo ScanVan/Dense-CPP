@@ -4,7 +4,7 @@ The ScanVan project is a share initiative between the EPFL and the HES-SO Valais
 
 ## This repository
 
-This repository holds the code for the models densification. It implements a densification methodology based on optical flow and extraction of dense 3D representation through the project specialised photogrammetric algorithms.
+This repository holds the code for the models densification using spherical images. It implements a densification methodology based on optical flow and extraction of dense 3D representation based on the project specialised photogrammetric algorithms.
 
 ## Copyright and License
 
