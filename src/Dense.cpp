@@ -98,6 +98,28 @@
 
     }
 
+    double sv_dense_geometry_amplitude( Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+
+        /* returned value variable */
+        double sv_return( 0.0 );
+
+        /* distances variable */
+        double sv_d12( ( sv_cen_1 - sv_cen_2 ).norm() );
+        double sv_d23( ( sv_cen_2 - sv_cen_3 ).norm() );
+        double sv_d31( ( sv_cen_3 - sv_cen_1 ).norm() );
+
+        /* assume extremum */
+        sv_return = sv_d12;
+
+        /* check extremum consistency */
+        if ( sv_return < sv_d23 ) sv_return = sv_d23;
+        if ( sv_return < sv_d31 ) sv_return = sv_d31;
+
+        /* return amplitude */
+        return( sv_return );
+
+    }
+
 /*
     source - i/o methods
  */
@@ -510,11 +532,6 @@
         /* import estimation parameters */
         sv_dense_io_pose( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
 
-        /* compute tolerence values */
-        sv_tol = sv_t12.norm() + sv_t23.norm();
-        sv_max = sv_tol *  20.0;
-        sv_tol = sv_tol / 150.0;
-
         /* import image */
         sv_img_prev   = sv_dense_io_image( argv[1], atof( argv[7] ) );
         sv_img_middle = sv_dense_io_image( argv[2], atof( argv[7] ) );
@@ -561,6 +578,12 @@
 
         /* compute scene */
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+
+        /* compute filtering tolerence values */
+        //sv_tol = sv_t12.norm() + sv_t23.norm();
+        sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_max = sv_tol *  20.0;
+        sv_tol = sv_tol / 150.0;
 
         /* filter scene */
         sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
