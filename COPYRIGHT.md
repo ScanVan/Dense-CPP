@@ -12,5 +12,5 @@ C. Liu <br />
 Beyond Pixels : Exploring New Representations and Applications for Motion Analysis <br />
 Massachusetts Institute of Technology <br />
 May 2009 <br />
-\textit{Corrections for compilation under Ubuntu 16.04 LTS}
+_Corrections for compilation under Ubuntu 16.04 LTS_
 
