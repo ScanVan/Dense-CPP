@@ -328,10 +328,109 @@
 
     }
 
+    string type2str(int type) {
+      string r;
+
+      uchar depth = type & CV_MAT_DEPTH_MASK;
+      uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+      switch ( depth ) {
+        case CV_8U:  r = "8U"; break;
+        case CV_8S:  r = "8S"; break;
+        case CV_16U: r = "16U"; break;
+        case CV_16S: r = "16S"; break;
+        case CV_32S: r = "32S"; break;
+        case CV_32F: r = "32F"; break;
+        case CV_64F: r = "64F"; break;
+        default:     r = "User"; break;
+      }
+
+      r += "C";
+      r += (chans+'0');
+
+      return r;
+    }
+
+    void sv_dense_flow_nvidia(std::string sv_path, double sv_scale, DImage & sv_flow_u, DImage & sv_flow_v ){
+        /* matrix variable */
+        cv::Mat sv_import;
+
+        /* matrix variable */
+        cv::Mat sv_image;
+
+        /* import and check image */
+        if ( ! ( sv_import = cv::imread( sv_path, cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH ) ).data) {
+
+            /* display message */
+            std::cerr << "scanvan : error : unable to import image" << std::endl;
+
+            /* send message */
+            exit( 1 );
+
+        }
+
+
+        /* resize image */
+////        cv::GaussianBlur( sv_import, sv_import, cv::Size(149, 149 ), 0, 0 );
+////        cv::namedWindow( "Display window", cv::WINDOW_FREERATIO | cv::WINDOW_GUI_EXPANDED );// Create a window for display.
+////        cv::imshow( "Display window", sv_import );
+////        cv::waitKey(0);
+//        cv::resize( sv_import, sv_image, cv::Size(), sv_scale, sv_scale, cv::INTER_AREA );
+//
+//
+//		cv::GaussianBlur( sv_image, sv_image, cv::Size(31, 31 ), 0, 0 );
+//		cv::GaussianBlur( sv_image, sv_image, cv::Size(31, 31 ), 0, 0 );
+//
+//        sv_flow_u.allocate(sv_image.cols, sv_image.rows, 1);
+//        sv_flow_v.allocate(sv_image.cols, sv_image.rows, 1);
+//        double * sv_p_u( sv_flow_u.pData );
+//        double * sv_p_v( sv_flow_v.pData );
+//        for(uint32_t y = 0; y < sv_image.rows;y++){
+//            for(uint32_t x = 0; x < sv_image.cols;x++){
+//				auto bgr = sv_image.at<cv::Vec3w>(y, x);
+//				*sv_p_u = (bgr[2]-32768)/64.0*sv_scale;
+//				*sv_p_v = (bgr[1]-32768)/64.0*sv_scale;
+//				sv_p_u++;
+//				sv_p_v++;
+//            }
+//        }
+
+        sv_import.convertTo(sv_image, CV_32F, 1.0/64.0, -512.0);
+
+//        cv::namedWindow( "Display window", cv::WINDOW_FREERATIO | cv::WINDOW_GUI_EXPANDED );// Create a window for display.
+//        cv::imshow( "Display window", sv_import );
+
+//		cv::GaussianBlur( sv_image, sv_image, cv::Size(31, 31 ), 0, 0 );
+//		cv::GaussianBlur( sv_image, sv_image, cv::Size(31, 31 ), 0, 0 );
+
+//		cv::Mat view;
+//		sv_image.convertTo(view, CV_16U, 64, 32768);
+
+//        cv::namedWindow( "filtred", cv::WINDOW_FREERATIO | cv::WINDOW_GUI_EXPANDED );// Create a window for display.
+//        cv::imshow( "filtred", view );
+
+//        cv::waitKey(0);
+		cv::resize( sv_image, sv_image, cv::Size(), sv_scale, sv_scale, cv::INTER_AREA );
+		sv_flow_u.allocate(sv_image.cols, sv_image.rows, 1);
+		sv_flow_v.allocate(sv_image.cols, sv_image.rows, 1);
+		double * sv_p_u( sv_flow_u.pData );
+		double * sv_p_v( sv_flow_v.pData );
+		for(uint32_t y = 0; y < sv_image.rows;y++){
+			for(uint32_t x = 0; x < sv_image.cols;x++){
+				auto bgr = sv_image.at<cv::Vec3f>(y, x);
+				*sv_p_u = (bgr[2])*sv_scale;
+				*sv_p_v = (bgr[1])*sv_scale;
+				sv_p_u++;
+				sv_p_v++;
+			}
+		}
+
+    }
+
 /*
     source - matching methods
  */
-
+#ifdef OPTICAL_FLOW_CPP
     void sv_dense_match( cv::Mat const & sv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3i > & sv_color ) {
 
         /* parsing pointer variable */
@@ -388,7 +487,79 @@
 
 
     }
+#endif
 
+#ifdef OPTICAL_FLOW_NVIDIA
+    double sv_bilinear_sample(double *p, double x, double y, int width){
+    	int ix = x;
+    	int iy = y;
+
+    	int i00 = iy*width + ix;
+    	int i01 = i00 + 1;
+    	int i10 = i00 + width;
+    	int i11 = i00 + width + 1;
+
+    	double fx = x-ix;
+    	double fy = y-iy;
+
+    	return  (p[i00]*(1.0-fx) + p[i01]*fx)*(1.0-fy) + (p[i10]*(1.0-fx) + p[i11]*fx)*fy;
+    }
+
+    void sv_dense_match( cv::Mat const & sv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_12_u, DImage const & sv_flow_12_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3i > & sv_color ) {
+        /* reset matches array */
+        sv_mat_1.clear();
+        sv_mat_2.clear();
+        sv_mat_3.clear();
+
+        /* color vector variable */
+        Eigen::Vector3i sv_pixel;
+
+        /* parsing central image pixels */
+        for ( long sv_y( 0 ); sv_y < sv_height; sv_y ++ ) {
+
+            /* parsing central image pixels */
+            for( long sv_x( 0 ); sv_x < sv_width; sv_x ++ ) {
+
+                /* check mask value */
+                if ( sv_mask.at <uchar> ( sv_y, sv_x ) != 0 ) {
+                    double pix_x = sv_x, pix_y = sv_y;
+
+                    /* First picture match */
+                    sv_mat_1.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, pix_x, pix_y ) );
+
+                    /* Second picture match */
+                    {
+						int offset = pix_y*sv_width + pix_x;
+						pix_x += sv_flow_12_u.pData[offset];
+						pix_y += sv_flow_12_v.pData[offset];
+						pix_x = max(0.0, min((double)sv_width-1, pix_x));
+						pix_y = max(0.0, min((double)sv_height-1, pix_y));
+						sv_mat_2.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, pix_x, pix_y ) );
+
+						/* compose color vector TODO pixel sample rounding*/
+	                    sv_pixel(0) = sv_image.at <cv::Vec3d> ( pix_y, pix_x )[2] * 255.0;
+	                    sv_pixel(1) = sv_image.at <cv::Vec3d> ( pix_y, pix_x )[1] * 255.0;
+	                    sv_pixel(2) = sv_image.at <cv::Vec3d> ( pix_y, pix_x )[0] * 255.0;
+
+	                    /* push color vector */
+	                    sv_color.push_back( sv_pixel );
+                    }
+
+
+
+                    /* Third picture match */
+                    {
+						pix_x += sv_bilinear_sample(sv_flow_23_u.pData, pix_x, pix_y, sv_width);
+						pix_y += sv_bilinear_sample(sv_flow_23_v.pData, pix_x, pix_y, sv_width);
+						pix_x = max(0.0, min((double)sv_width-1, pix_x));
+						pix_y = max(0.0, min((double)sv_height-1, pix_y));
+						sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, pix_x, pix_y ) );
+                    }
+                }
+            }
+        }
+    }
+#endif
 /*
     source - scene methods
  */
@@ -441,32 +612,156 @@
             sv_disp_3 = ( sv_cen_3 + ( sv_rad_3 * sv_mat_3[sv_parse] ) - sv_scene[sv_parse] ).norm();
 
             /* apply filtering condition */
-            if ( sv_disp_1 <= sv_tol )
-            if ( sv_disp_2 <= sv_tol )
-            if ( sv_disp_3 <= sv_tol ) {
+            bool match = true;
+            match &= sv_disp_1 <= sv_tol;
+			match &= sv_disp_2 <= sv_tol;
+			match &= sv_disp_3 <= sv_tol;
+			match &= ( sv_rad_2 > 0.0 ) && ( sv_rad_2 < sv_max );
 
-                /* apply filtering condition */
-                if ( ( sv_rad_2 > 0.0 ) && ( sv_rad_2 < sv_max ) ) {
+			if(sv_parse == 421447 || sv_parse == 420304){
+				cout << match << endl;
 
-                    /* element selection - position */
-                    sv_fscene.push_back( sv_scene[sv_parse] );
+			}
 
-                    /* element selection - color */
-                    sv_fcolor.push_back( sv_color[sv_parse] );
+#ifdef BAD_MATCH_RED
+			/* element selection - position */
+			sv_fscene.push_back( sv_scene[sv_parse] );
 
-                }
+			/* element selection - color */
+			sv_fcolor.push_back( match ? sv_color[sv_parse] : Eigen::Vector3i(0,0,255));
+#else
+			if(match){
+				/* element selection - position */
+				sv_fscene.push_back( sv_scene[sv_parse] );
 
+				/* element selection - color */
+				sv_fcolor.push_back( sv_color[sv_parse] );
             }
+#endif
 
         }
 
     }
 
+
+#include <time.h>
+void profile(string msg){
+	static struct timespec specOld;
+    struct timespec specNew;
+    double t;
+
+    clock_gettime(CLOCK_REALTIME, &specNew);
+
+    if (specNew.tv_nsec >= 1000000000) {
+    	specNew.tv_nsec -= 1000000000;
+    	specNew.tv_sec++;
+    }
+    t = specNew.tv_sec - specOld.tv_sec + (specNew.tv_nsec - specOld.tv_nsec)*1e-9;
+    std::cout << msg << " : " << t << endl;
+    specOld = specNew;
+}
+
 /*
     source - main function
  */
 
+//
+//#include "NvOFCuda.h"
+//#include "NvOFDataLoader.h"
+//#include <memory>
+//
+//    int opticalFlow(){
+//    	int gpuId = 0;
+//        int nGpu = 0;
+//        std::string inputFileName = "/home/dolu/pro/Optical_Flow_SDK_1.0.13/inputD";
+//
+//        CUDA_DRVAPI_CALL(cuInit(0));
+//        CUDA_DRVAPI_CALL(cuDeviceGetCount(&nGpu));
+//        if (gpuId < 0 || gpuId >= nGpu)
+//        {
+//            std::cout << "GPU ordinal out of range. Should be with in [" << 0 << ", " << nGpu - 1 << "]" << std::endl;
+//            return 1;
+//        }
+//
+//        CUdevice cuDevice = 0;
+//        CUDA_DRVAPI_CALL(cuDeviceGet(&cuDevice, gpuId));
+//        char szDeviceName[80];
+//        CUDA_DRVAPI_CALL(cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice));
+//        std::cout << "GPU in use: " << szDeviceName << std::endl;
+//
+//        CUcontext cuContext = nullptr;
+//        CUDA_DRVAPI_CALL(cuCtxCreate(&cuContext, 0, cuDevice));
+//
+//
+//        std::unique_ptr<NvOFDataLoader> dataLoader = CreateDataloader(inputFileName);
+//        uint32_t width = dataLoader->GetWidth();
+//        uint32_t height = dataLoader->GetHeight();
+//        uint32_t nFrameSize = width * height;
+//
+//        CUstream   inputStream = nullptr;
+//        CUstream   outputStream = nullptr;
+//
+//        // Create Optical Flow object with desired frame width and height
+//        NvOFObj nvOpticalFlow = NvOFCuda::Create(cuContext,
+//           width,
+//           height,
+//           NV_OF_BUFFER_FORMAT_GRAYSCALE8,
+//                                                    NV_OF_CUDA_BUFFER_TYPE_CUARRAY,
+//                                                    NV_OF_CUDA_BUFFER_TYPE_CUARRAY,
+//                                                    NV_OF_MODE_OPTICALFLOW,
+//                                                    NV_OF_PERF_LEVEL_SLOW,
+//                                                    inputStream,
+//                                                    outputStream);
+//
+//
+//        // Create input and output buffers
+//        std::vector<NvOFBufferObj> inputBuffers = nvOpticalFlow->CreateBuffers(NV_OF_BUFFER_USAGE_INPUT, 2);
+//        std::vector<NvOFBufferObj> outputBuffers = nvOpticalFlow->CreateBuffers(NV_OF_BUFFER_USAGE_OUTPUT, 1);
+//
+//
+//        int curFrameIdx = 0;
+//        inputBuffers[curFrameIdx]->UploadData(dataLoader->CurrentItem());
+//        dataLoader->Next();
+//        curFrameIdx ^= 1;
+//
+//        uint32_t nOutSize = outputBuffers[0]->getWidth() * outputBuffers[0]->getHeight();
+//        std::unique_ptr<NV_OF_FLOW_VECTOR[]>pOut(new NV_OF_FLOW_VECTOR[nOutSize]);
+//        if (pOut == nullptr)
+//        {
+//            std::ostringstream err;
+//            err << "Failed to allocate output host memory of size " << nOutSize * sizeof(NV_OF_FLOW_VECTOR) << " bytes" << std::endl;
+//            throw std::bad_alloc();
+//        }
+//
+//        // Read frames and calculate optical flow vectors on consecutive frames
+//        for (; !dataLoader->IsDone(); dataLoader->Next())
+//        {
+//            inputBuffers[curFrameIdx]->UploadData(dataLoader->CurrentItem());
+//
+//            nvOpticalFlow->Execute(inputBuffers[curFrameIdx ^ 1].get(),
+//                                                inputBuffers[curFrameIdx].get(),
+//                                                outputBuffers[0].get());
+//
+//            outputBuffers[0]->DownloadData(pOut.get());
+//
+//            // Use the flow vectors generated in buffer pOut.get() for further
+//            // processing or save to a file.
+//
+//            curFrameIdx = curFrameIdx ^ 1;
+//        }
+//
+//
+//        CUDA_DRVAPI_CALL(cuCtxDestroy(cuContext));
+//
+//        std::cout << "MIAOU" << endl;
+//        return 0;
+//    }
+
+
     int main( int argc, char ** argv ) {
+		profile("init");
+    	//exit(opticalFlow());
+
 
         /* matrix variable */
         cv::Mat sv_img_prev;
@@ -515,7 +810,9 @@
         double sv_tol( 0.0 );
         double sv_max( 0.0 );
 
+
         /* check consistency */
+#ifdef OPTICAL_FLOW_CPP
         if ( argc != 8 ) {
 
             /* display message */
@@ -528,14 +825,32 @@
             return( 1 );
 
         }
+#endif
+
+#ifdef OPTICAL_FLOW_NVIDIA
+        if ( argc != 10 ) {
+
+            /* display message */
+            std::cerr << "scanvan : error : wrong usage" << std::endl;
+
+            /* display quick help */
+            std::cerr << "./Dense [image 1 path] [image 2 path] [image 3 path] [pose estimation file] [scene export path] [mask image path] [image scale] [nvidia flow 12] [nvidia flow 23]" << std::endl;
+
+            std::cerr << "got " << argc << " arguments = "   << std::endl << argv[1] << std::endl;
+            /* send message */
+            return( 1 );
+
+        }
+#endif
+        float sv_scale = atof( argv[7] );
 
         /* import estimation parameters */
         sv_dense_io_pose( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
 
         /* import image */
-        sv_img_prev   = sv_dense_io_image( argv[1], atof( argv[7] ) );
-        sv_img_middle = sv_dense_io_image( argv[2], atof( argv[7] ) );
-        sv_img_next   = sv_dense_io_image( argv[3], atof( argv[7] ) );
+        sv_img_prev   = sv_dense_io_image( argv[1], sv_scale );
+        sv_img_middle = sv_dense_io_image( argv[2], sv_scale );
+        sv_img_next   = sv_dense_io_image( argv[3], sv_scale );
 
         /* extract image reference */
         sv_img_width  = sv_img_middle.cols;
@@ -547,49 +862,65 @@
         sv_dense_consistent_image( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
 
         /* import mask */
-        sv_mask = sv_dense_io_mask( argv[6], atof( argv[7] ) );
+        sv_mask = sv_dense_io_mask( argv[6], sv_scale );
 
+
+        profile("args");
     # pragma omp parallel sections
     {
 
     # pragma omp section
     {
-
         /* compute optical flow : image 2 -> 1 */
+#ifdef OPTICAL_FLOW_CPP
         sv_dense_flow( sv_img_middle, sv_img_prev, sv_img_width, sv_img_height, sv_img_depth, sv_flow_21_u, sv_flow_21_v );
-
+#endif
+#ifdef OPTICAL_FLOW_NVIDIA
+        sv_dense_flow_nvidia(argv[8], sv_scale, sv_flow_21_u, sv_flow_21_v);
+#endif
     }
 
     # pragma omp section
     {
 
         /* compute optical flow : image 2 -> 3 */
+#ifdef OPTICAL_FLOW_CPP
         sv_dense_flow( sv_img_middle, sv_img_next, sv_img_width, sv_img_height, sv_img_depth, sv_flow_23_u, sv_flow_23_v );
-
+#endif
+#ifdef OPTICAL_FLOW_NVIDIA
+        sv_dense_flow_nvidia(argv[9], sv_scale, sv_flow_23_u, sv_flow_23_v);
+#endif
     }
 
     } /* parallel sections */
+    	profile("sv_dense_flow_nvidia");
 
         /* compute matches */
         sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_color );
+        profile("sv_dense_match");
 
         /* compute common frame - aligned on first camera */
         sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
+        profile("sv_dense_geometry_common");
 
         /* compute scene */
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        profile("sv_dense_scene");
 
         /* compute filtering tolerence values */
         //sv_tol = sv_t12.norm() + sv_t23.norm();
         sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3 );
         sv_max = sv_tol *  20.0;
         sv_tol = sv_tol / 150.0;
+        profile("sv_dense_geometry_amplitude");
 
         /* filter scene */
         sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        profile("sv_dense_filter");
 
         /* export computed scene */
         sv_dense_io_scene( argv[5], sv_fscene, sv_fcolor );
+        profile("sv_dense_io_scene");
 
         /* send message */
         return( 0 );

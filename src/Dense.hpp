@@ -31,6 +31,13 @@
     # ifndef __SV_DENSE__
     # define __SV_DENSE__
 
+
+	//#define OPTICAL_FLOW_CPP
+	#define OPTICAL_FLOW_NVIDIA
+
+
+	#define BAD_MATCH_RED
+
 /*
     header - internal includes
  */
