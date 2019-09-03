@@ -124,10 +124,10 @@
     source - i/o methods
  */
 
-    void sv_dense_io_pose( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23 ) {
+    void sv_dense_io_pose( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r01, Eigen::Vector3d & sv_t01, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23, Eigen::Matrix3d & sv_r34, Eigen::Vector3d & sv_t34 ) {
 
         /* reading matrix variable */
-        Eigen::VectorXd sv_read( 24 );
+        Eigen::VectorXd sv_read( 48 );
 
         /* stream variable */
         std::fstream sv_stream;
@@ -147,7 +147,7 @@
         }
 
         /* import estimation parameter */
-        for ( long sv_count( 0 ); sv_count < 24; sv_count ++ ) {
+        for ( long sv_count( 0 ); sv_count < 48; sv_count ++ ) {
 
             /* import token */
             sv_stream >> sv_read(sv_count);
@@ -158,20 +158,36 @@
         sv_stream.close();
 
         /* compose estimation matrix */
-        sv_r12(0,0) = sv_read( 0); sv_r12(0,1) = sv_read( 1); sv_r12(0,2) = sv_read( 2);
-        sv_r12(1,0) = sv_read( 8); sv_r12(1,1) = sv_read( 9); sv_r12(1,2) = sv_read(10);
-        sv_r12(2,0) = sv_read(16); sv_r12(2,1) = sv_read(17); sv_r12(2,2) = sv_read(18);
+        sv_r01(0,0) = sv_read( 0); sv_r01(0,1) = sv_read( 1); sv_r01(0,2) = sv_read( 2);
+        sv_r01(1,0) = sv_read(16); sv_r01(1,1) = sv_read(17); sv_r01(1,2) = sv_read(18);
+        sv_r01(2,0) = sv_read(32); sv_r01(2,1) = sv_read(33); sv_r01(2,2) = sv_read(34);
 
         /* compose estimation matrix */
-        sv_r23(0,0) = sv_read( 4); sv_r23(0,1) = sv_read( 5); sv_r23(0,2) = sv_read( 6);
-        sv_r23(1,0) = sv_read(12); sv_r23(1,1) = sv_read(13); sv_r23(1,2) = sv_read(14);
-        sv_r23(2,0) = sv_read(20); sv_r23(2,1) = sv_read(21); sv_r23(2,2) = sv_read(22);
+        sv_r12(0,0) = sv_read( 4); sv_r12(0,1) = sv_read( 5); sv_r12(0,2) = sv_read( 6);
+        sv_r12(1,0) = sv_read(20); sv_r12(1,1) = sv_read(21); sv_r12(1,2) = sv_read(22);
+        sv_r12(2,0) = sv_read(36); sv_r12(2,1) = sv_read(37); sv_r12(2,2) = sv_read(38);
+
+        /* compose estimation matrix */
+        sv_r23(0,0) = sv_read( 8); sv_r23(0,1) = sv_read( 9); sv_r23(0,2) = sv_read(10);
+        sv_r23(1,0) = sv_read(24); sv_r23(1,1) = sv_read(25); sv_r23(1,2) = sv_read(26);
+        sv_r23(2,0) = sv_read(40); sv_r23(2,1) = sv_read(41); sv_r23(2,2) = sv_read(42);
+
+        /* compose estimation matrix */
+        sv_r34(0,0) = sv_read(12); sv_r34(0,1) = sv_read(13); sv_r34(0,2) = sv_read(14);
+        sv_r34(1,0) = sv_read(28); sv_r34(1,1) = sv_read(29); sv_r34(1,2) = sv_read(30);
+        sv_r34(2,0) = sv_read(44); sv_r34(2,1) = sv_read(45); sv_r34(2,2) = sv_read(46);
 
         /* compose translation vector */
-        sv_t12(0) = sv_read( 3); sv_t12(1) = sv_read(11); sv_t12(2) = sv_read(19);
+        sv_t01(0) = sv_read( 3); sv_t01(1) = sv_read(19); sv_t01(2) = sv_read(35);
 
         /* compose translation vector */
-        sv_t23(0) = sv_read( 7); sv_t23(1) = sv_read(15); sv_t23(2) = sv_read(23);
+        sv_t12(0) = sv_read( 7); sv_t12(1) = sv_read(23); sv_t12(2) = sv_read(39);
+
+        /* compose translation vector */
+        sv_t23(0) = sv_read(11); sv_t23(1) = sv_read(27); sv_t23(2) = sv_read(43);
+
+        /* compose translation vector */
+        sv_t34(0) = sv_read(15); sv_t34(1) = sv_read(31); sv_t34(2) = sv_read(47);
 
     }
 
@@ -469,9 +485,11 @@
     int main( int argc, char ** argv ) {
 
         /* matrix variable */
+        cv::Mat sv_img_pre2;
         cv::Mat sv_img_prev;
         cv::Mat sv_img_middle;
         cv::Mat sv_img_next;
+        cv::Mat sv_img_nex2;
 
         /* matrix variable */
         cv::Mat sv_mask;
@@ -482,26 +500,38 @@
         long sv_img_depth ( 0 );
 
         /* flow variable */
+        DImage sv_flow_20_u;
+        DImage sv_flow_20_v;
         DImage sv_flow_21_u;
         DImage sv_flow_21_v;
         DImage sv_flow_23_u;
         DImage sv_flow_23_v;
+        DImage sv_flow_24_u;
+        DImage sv_flow_24_v;
 
         /* matches variable */
         std::vector < Eigen::Vector3d > sv_mat_1;
         std::vector < Eigen::Vector3d > sv_mat_2;
         std::vector < Eigen::Vector3d > sv_mat_3;
+        std::vector < Eigen::Vector3d > sv_mat_4;
+        std::vector < Eigen::Vector3d > sv_mat_5;
 
         /* center variable */
         Eigen::Vector3d sv_cen_1;
         Eigen::Vector3d sv_cen_2;
         Eigen::Vector3d sv_cen_3;
+        Eigen::Vector3d sv_cen_4;
+        Eigen::Vector3d sv_cen_5;
 
         /* estimation parameters */
+        Eigen::Matrix3d sv_r01;
         Eigen::Matrix3d sv_r12;
         Eigen::Matrix3d sv_r23;
+        Eigen::Matrix3d sv_r34;
+        Eigen::Vector3d sv_t01;
         Eigen::Vector3d sv_t12;
         Eigen::Vector3d sv_t23;
+        Eigen::Vector3d sv_t34;
 
         /* scene variable */
         std::vector < Eigen::Vector3d > sv_scene;
@@ -516,13 +546,13 @@
         double sv_max( 0.0 );
 
         /* check consistency */
-        if ( argc != 8 ) {
+        if ( argc != 10 ) {
 
             /* display message */
             std::cerr << "scanvan : error : wrong usage" << std::endl;
 
             /* display quick help */
-            std::cerr << "./Dense [image 1 path] [image 2 path] [image 3 path] [pose estimation file] [scene export path] [mask image path] [image scale]" << std::endl;
+            std::cerr << "./Dense [image 1 path] [image 2 path] [image 3 path] [image 4 path] [image 5 path] [pose estimation file] [scene export path] [mask image path] [image scale]" << std::endl;
 
             /* send message */
             return( 1 );
@@ -530,12 +560,14 @@
         }
 
         /* import estimation parameters */
-        sv_dense_io_pose( argv[4], sv_r12, sv_t12, sv_r23, sv_t23 );
+        sv_dense_io_pose( argv[6], sv_r01, sv_t01, sv_r12, sv_t12, sv_r23, sv_t23, sv_r34, sv_t34 );
 
         /* import image */
-        sv_img_prev   = sv_dense_io_image( argv[1], atof( argv[7] ) );
-        sv_img_middle = sv_dense_io_image( argv[2], atof( argv[7] ) );
-        sv_img_next   = sv_dense_io_image( argv[3], atof( argv[7] ) );
+        sv_img_pre2   = sv_dense_io_image( argv[1], atof( argv[9] ) );
+        sv_img_prev   = sv_dense_io_image( argv[2], atof( argv[9] ) );
+        sv_img_middle = sv_dense_io_image( argv[3], atof( argv[9] ) );
+        sv_img_next   = sv_dense_io_image( argv[4], atof( argv[9] ) );
+        sv_img_nex2   = sv_dense_io_image( argv[5], atof( argv[9] ) );
 
         /* extract image reference */
         sv_img_width  = sv_img_middle.cols;
@@ -543,14 +575,24 @@
         sv_img_depth  = sv_img_middle.channels();
 
         /* check image */
+        sv_dense_consistent_image( sv_img_pre2, sv_img_width, sv_img_height, sv_img_depth );
         sv_dense_consistent_image( sv_img_prev, sv_img_width, sv_img_height, sv_img_depth );
         sv_dense_consistent_image( sv_img_next, sv_img_width, sv_img_height, sv_img_depth );
+        sv_dense_consistent_image( sv_img_nex2, sv_img_width, sv_img_height, sv_img_depth );
 
         /* import mask */
-        sv_mask = sv_dense_io_mask( argv[6], atof( argv[7] ) );
+        sv_mask = sv_dense_io_mask( argv[8], atof( argv[9] ) );
 
     # pragma omp parallel sections
     {
+
+    # pragma omp section
+    {
+
+        /* compute optical flow : image 2 -> 0 */
+        sv_dense_flow( sv_img_middle, sv_img_pre2, sv_img_width, sv_img_height, sv_img_depth, sv_flow_20_u, sv_flow_20_v );
+
+    }
 
     # pragma omp section
     {
@@ -568,7 +610,17 @@
 
     }
 
+    # pragma omp section
+    {
+
+        /* compute optical flow : image 2 -> 4 */
+        sv_dense_flow( sv_img_middle, sv_img_nex2, sv_img_width, sv_img_height, sv_img_depth, sv_flow_24_u, sv_flow_24_v );
+
+    }
+
     } /* parallel sections */
+
+        return( 0 );
 
         /* compute matches */
         sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_color );
@@ -589,7 +641,7 @@
         sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
         /* export computed scene */
-        sv_dense_io_scene( argv[5], sv_fscene, sv_fcolor );
+        sv_dense_io_scene( argv[7], sv_fscene, sv_fcolor );
 
         /* send message */
         return( 0 );

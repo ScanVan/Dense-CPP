@@ -91,7 +91,7 @@
 
     /* *** */
 
-    void sv_dense_io_pose( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23 );
+    void sv_dense_io_pose( char const * const sv_estimation_path, Eigen::Matrix3d & sv_r01, Eigen::Vector3d & sv_t01, Eigen::Matrix3d & sv_r12, Eigen::Vector3d & sv_t12, Eigen::Matrix3d & sv_r23, Eigen::Vector3d & sv_t23, Eigen::Matrix3d & sv_r34, Eigen::Vector3d & sv_t34 );
 
     /* *** */
 
