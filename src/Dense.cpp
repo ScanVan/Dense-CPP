@@ -57,10 +57,10 @@
             sv_mat_3[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * sv_mat_3[sv_parse] );
 
             /* compute direction - fourth camera */
-            sv_mat_4[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * ( sv_r23.transpose() * sv_mat_3[sv_parse] ) );
+            sv_mat_4[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * ( sv_r23.transpose() * sv_mat_4[sv_parse] ) );
 
             /* compute direction - fifth camera */
-            sv_mat_4[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * ( sv_r23.transpose() * ( sv_r34.transpose() * sv_mat_3[sv_parse] ) ) );
+            sv_mat_5[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * ( sv_r23.transpose() * ( sv_r34.transpose() * sv_mat_5[sv_parse] ) ) );
 
         }
 
@@ -508,8 +508,8 @@
             sv_rad_1 = sv_mat_1[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_1 );
             sv_rad_2 = sv_mat_2[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_2 );
             sv_rad_3 = sv_mat_3[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_3 );
-            sv_rad_3 = sv_mat_4[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_4 );
-            sv_rad_3 = sv_mat_5[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_5 );
+            sv_rad_4 = sv_mat_4[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_4 );
+            sv_rad_5 = sv_mat_5[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_5 );
 
             /* compute element disparity */
             sv_disp_1 = ( sv_cen_1 + ( sv_rad_1 * sv_mat_1[sv_parse] ) - sv_scene[sv_parse] ).norm();
@@ -666,6 +666,11 @@
 
     }
 
+    } /* parallel sections */
+
+    # pragma omp parallel sections
+    {
+
     # pragma omp section
     {
 
@@ -696,7 +701,7 @@
         /* compute filtering tolerence values */
         //sv_tol = sv_t12.norm() + sv_t23.norm();
         sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5 );
-        sv_max = sv_tol *  20.0;
+        sv_max = sv_tol *  10.0;
         sv_tol = sv_tol / 150.0;
 
         /* filter scene */
@@ -704,6 +709,9 @@
 
         /* export computed scene */
         sv_dense_io_scene( argv[7], sv_fscene, sv_fcolor );
+
+        /* display information */
+        std::cout << "Remaining points after filtering : " << sv_fscene.size() << " over " << sv_scene.size() << std::endl;
 
         /* send message */
         return( 0 );
