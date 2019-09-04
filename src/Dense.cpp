@@ -81,17 +81,21 @@
 
     }
 
-    Eigen::Vector3d sv_dense_geometry_intersect( Eigen::Vector3d const & sv_mat_1, Eigen::Vector3d const & sv_mat_2, Eigen::Vector3d const & sv_mat_3, Eigen::Vector3d  const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    Eigen::Vector3d sv_dense_geometry_intersect( Eigen::Vector3d const & sv_mat_1, Eigen::Vector3d const & sv_mat_2, Eigen::Vector3d const & sv_mat_3, Eigen::Vector3d const & sv_mat_4, Eigen::Vector3d const & sv_mat_5, Eigen::Vector3d  const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3, Eigen::Vector3d const & sv_cen_4, Eigen::Vector3d const & sv_cen_5 ) {
 
         /* intermediate matrix */
         Eigen::Matrix3d sv_w1;
         Eigen::Matrix3d sv_w2;
         Eigen::Matrix3d sv_w3;
+        Eigen::Matrix3d sv_w4;
+        Eigen::Matrix3d sv_w5;
 
         /* intermediate vector */
         Eigen::Vector3d sv_q1;
         Eigen::Vector3d sv_q2;
         Eigen::Vector3d sv_q3;
+        Eigen::Vector3d sv_q4;
+        Eigen::Vector3d sv_q5;
 
         /* intermediate computation */
         sv_w1 = Eigen::Matrix3d::Identity() - ( sv_mat_1 * sv_mat_1.transpose() );
@@ -105,8 +109,16 @@
         sv_w3 = Eigen::Matrix3d::Identity() - ( sv_mat_3 * sv_mat_3.transpose() );
         sv_q3 = sv_w3 * sv_cen_3;
 
+        /* intermediate computation */
+        sv_w4 = Eigen::Matrix3d::Identity() - ( sv_mat_4 * sv_mat_4.transpose() );
+        sv_q4 = sv_w4 * sv_cen_4;
+
+        /* intermediate computation */
+        sv_w5 = Eigen::Matrix3d::Identity() - ( sv_mat_5 * sv_mat_5.transpose() );
+        sv_q5 = sv_w5 * sv_cen_5;
+
         /* compute intersection */
-        return( ( ( sv_w1 + sv_w2 + sv_w3 ).inverse() ) * ( sv_q1 + sv_q2 + sv_q3 ) );
+        return( ( ( sv_w1 + sv_w2 + sv_w3 + sv_w4 + sv_w5 ).inverse() ) * ( sv_q1 + sv_q2 + sv_q3 + sv_q4 + sv_q5 ) );
 
     }
 
@@ -437,7 +449,7 @@
     source - scene methods
  */
 
-    std::vector < Eigen::Vector3d > sv_dense_scene( std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    std::vector < Eigen::Vector3d > sv_dense_scene( std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, std::vector < Eigen::Vector3d > const & sv_mat_4, std::vector < Eigen::Vector3d > const & sv_mat_5, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3, Eigen::Vector3d const & sv_cen_4, Eigen::Vector3d const & sv_cen_5 ) {
 
         /* returned structure variable */
         std::vector < Eigen::Vector3d > sv_scene;
@@ -446,7 +458,7 @@
         for ( long sv_parse( 0 ); sv_parse < sv_mat_1.size(); sv_parse ++ ) {
 
             /* compute and push optimised intersection */
-            sv_scene.push_back( sv_dense_geometry_intersect( sv_mat_1[sv_parse], sv_mat_2[sv_parse], sv_mat_3[sv_parse], sv_cen_1, sv_cen_2, sv_cen_3 ) );
+            sv_scene.push_back( sv_dense_geometry_intersect( sv_mat_1[sv_parse], sv_mat_2[sv_parse], sv_mat_3[sv_parse], sv_mat_4[sv_parse], sv_mat_5[sv_parse], sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5 ) );
 
         }
 
@@ -654,10 +666,10 @@
         /* compute common frame - aligned on first camera */
         sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5, sv_r01, sv_t01, sv_r12, sv_t12, sv_r23, sv_t23, sv_r34, sv_t34 );
 
-        return( 0 );
-
         /* compute scene */
-        sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5 );
+
+        return( 0 );
 
         /* compute filtering tolerence values */
         //sv_tol = sv_t12.norm() + sv_t23.norm();
