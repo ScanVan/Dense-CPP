@@ -485,17 +485,21 @@
     source - filtering methods
  */
 
-    void sv_dense_filter( double const sv_tol, double const sv_max, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    void sv_dense_filter( double const sv_tol, double const sv_max, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, std::vector < Eigen::Vector3d > const & sv_mat_4, std::vector < Eigen::Vector3d > const & sv_mat_5, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3, Eigen::Vector3d const & sv_cen_4, Eigen::Vector3d const & sv_cen_5 ) {
 
         /* element radius variable */
         double sv_rad_1( 0.0 );
         double sv_rad_2( 0.0 );
         double sv_rad_3( 0.0 );
+        double sv_rad_4( 0.0 );
+        double sv_rad_5( 0.0 );
 
         /* element disparity variable */
         double sv_disp_1( 0.0 );
         double sv_disp_2( 0.0 );
         double sv_disp_3( 0.0 );
+        double sv_disp_4( 0.0 );
+        double sv_disp_5( 0.0 );
 
         /* parsing scene elements */
         for ( long sv_parse( 0 ); sv_parse < sv_scene.size(); sv_parse ++ ) {
@@ -504,19 +508,25 @@
             sv_rad_1 = sv_mat_1[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_1 );
             sv_rad_2 = sv_mat_2[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_2 );
             sv_rad_3 = sv_mat_3[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_3 );
+            sv_rad_3 = sv_mat_4[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_4 );
+            sv_rad_3 = sv_mat_5[sv_parse].transpose() * ( sv_scene[sv_parse] - sv_cen_5 );
 
             /* compute element disparity */
             sv_disp_1 = ( sv_cen_1 + ( sv_rad_1 * sv_mat_1[sv_parse] ) - sv_scene[sv_parse] ).norm();
             sv_disp_2 = ( sv_cen_2 + ( sv_rad_2 * sv_mat_2[sv_parse] ) - sv_scene[sv_parse] ).norm();
             sv_disp_3 = ( sv_cen_3 + ( sv_rad_3 * sv_mat_3[sv_parse] ) - sv_scene[sv_parse] ).norm();
+            sv_disp_4 = ( sv_cen_4 + ( sv_rad_4 * sv_mat_4[sv_parse] ) - sv_scene[sv_parse] ).norm();
+            sv_disp_5 = ( sv_cen_5 + ( sv_rad_5 * sv_mat_5[sv_parse] ) - sv_scene[sv_parse] ).norm();
 
             /* apply filtering condition */
             if ( sv_disp_1 <= sv_tol )
             if ( sv_disp_2 <= sv_tol )
-            if ( sv_disp_3 <= sv_tol ) {
+            if ( sv_disp_3 <= sv_tol )
+            if ( sv_disp_4 <= sv_tol )
+            if ( sv_disp_5 <= sv_tol ) {
 
                 /* apply filtering condition */
-                if ( ( sv_rad_2 > 0.0 ) && ( sv_rad_2 < sv_max ) ) {
+                if ( ( sv_rad_3 > 0.0 ) && ( sv_rad_3 < sv_max ) ) {
 
                     /* element selection - position */
                     sv_fscene.push_back( sv_scene[sv_parse] );
@@ -689,10 +699,8 @@
         sv_max = sv_tol *  20.0;
         sv_tol = sv_tol / 150.0;
 
-        return( 0 );
-
         /* filter scene */
-        sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5 );
 
         /* export computed scene */
         sv_dense_io_scene( argv[7], sv_fscene, sv_fcolor );
