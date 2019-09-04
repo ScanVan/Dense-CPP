@@ -45,27 +45,39 @@
 
     }
 
-    void sv_dense_geometry_common( std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, Eigen::Vector3d & sv_cen_1, Eigen::Vector3d & sv_cen_2, Eigen::Vector3d & sv_cen_3, Eigen::Matrix3d const & sv_r12, Eigen::Vector3d const & sv_t12, Eigen::Matrix3d const & sv_r23, Eigen::Vector3d const & sv_t23 ) {
+    void sv_dense_geometry_common( std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3d > & sv_mat_4, std::vector < Eigen::Vector3d > & sv_mat_5, Eigen::Vector3d & sv_cen_1, Eigen::Vector3d & sv_cen_2, Eigen::Vector3d & sv_cen_3, Eigen::Vector3d & sv_cen_4, Eigen::Vector3d & sv_cen_5, Eigen::Matrix3d const & sv_r01, Eigen::Vector3d const & sv_t01, Eigen::Matrix3d const & sv_r12, Eigen::Vector3d const & sv_t12, Eigen::Matrix3d const & sv_r23, Eigen::Vector3d const & sv_t23, Eigen::Matrix3d const & sv_r34, Eigen::Vector3d const & sv_t34 ) {
 
         /* parsing directions vectors */
         for ( long sv_parse( 0 ); sv_parse < sv_mat_1.size(); sv_parse ++ ) {
 
-            /* compute direction - middle camera */
-            sv_mat_2[sv_parse] = sv_r12.transpose() * sv_mat_2[sv_parse];
+            /* compute direction - second camera */
+            sv_mat_2[sv_parse] = sv_r01.transpose() * sv_mat_2[sv_parse];
 
-            /* compute direction - last camera */
-            sv_mat_3[sv_parse] = sv_r12.transpose() * ( sv_r23.transpose() * sv_mat_3[sv_parse] );
+            /* compute direction - third camera */
+            sv_mat_3[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * sv_mat_3[sv_parse] );
+
+            /* compute direction - fourth camera */
+            sv_mat_4[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * ( sv_r23.transpose() * sv_mat_3[sv_parse] ) );
+
+            /* compute direction - fifth camera */
+            sv_mat_4[sv_parse] = sv_r01.transpose() * ( sv_r12.transpose() * ( sv_r23.transpose() * ( sv_r34.transpose() * sv_mat_3[sv_parse] ) ) );
 
         }
 
         /* compute center - first camera */
         sv_cen_1 = Eigen::Vector3d::Zero();
 
-        /* compute center - middle camera */
-        sv_cen_2 = - sv_r12.transpose() * sv_t12;
+        /* compute center - second camera */
+        sv_cen_2 = - sv_r01.transpose() * sv_t01;
 
-        /* compute center - last camera */
-        sv_cen_3 = sv_cen_2 - ( sv_r12.transpose() * sv_r23.transpose() ) * sv_t23;
+        /* compute center - third camera */
+        sv_cen_3 = sv_cen_2 - ( sv_r01.transpose() * sv_r12.transpose() ) * sv_t12;
+
+        /* compute center - fourth camera */
+        sv_cen_4 = sv_cen_3 - ( sv_r01.transpose() * sv_r12.transpose() * sv_r23.transpose() ) * sv_t23;
+
+        /* compute center - fourth camera */
+        sv_cen_5 = sv_cen_4 - ( sv_r01.transpose() * sv_r12.transpose() * sv_r23.transpose() * sv_r34.transpose() ) * sv_t34;
 
     }
 
@@ -639,10 +651,10 @@
         /* compute matches */
         sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_20_u, sv_flow_20_v, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_flow_24_u, sv_flow_24_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_color );
 
-        return( 0 );
-
         /* compute common frame - aligned on first camera */
-        sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );
+        sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5, sv_r01, sv_t01, sv_r12, sv_t12, sv_r23, sv_t23, sv_r34, sv_t34 );
+
+        return( 0 );
 
         /* compute scene */
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
