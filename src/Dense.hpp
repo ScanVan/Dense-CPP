@@ -87,7 +87,7 @@
 
     /* *** */
 
-    double sv_dense_geometry_amplitude( Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 );
+    double sv_dense_geometry_amplitude( Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3, Eigen::Vector3d const & sv_cen_4, Eigen::Vector3d const & sv_cen_5 );
 
     /* *** */
 

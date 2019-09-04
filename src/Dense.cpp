@@ -122,22 +122,36 @@
 
     }
 
-    double sv_dense_geometry_amplitude( Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    double sv_dense_geometry_amplitude( Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3, Eigen::Vector3d const & sv_cen_4, Eigen::Vector3d const & sv_cen_5 ) {
 
         /* returned value variable */
         double sv_return( 0.0 );
 
         /* distances variable */
         double sv_d12( ( sv_cen_1 - sv_cen_2 ).norm() );
+        double sv_d13( ( sv_cen_1 - sv_cen_3 ).norm() );
+        double sv_d14( ( sv_cen_1 - sv_cen_4 ).norm() );
+        double sv_d15( ( sv_cen_1 - sv_cen_5 ).norm() );
         double sv_d23( ( sv_cen_2 - sv_cen_3 ).norm() );
-        double sv_d31( ( sv_cen_3 - sv_cen_1 ).norm() );
+        double sv_d24( ( sv_cen_2 - sv_cen_4 ).norm() );
+        double sv_d25( ( sv_cen_2 - sv_cen_5 ).norm() );
+        double sv_d34( ( sv_cen_3 - sv_cen_4 ).norm() );
+        double sv_d35( ( sv_cen_3 - sv_cen_5 ).norm() );
+        double sv_d45( ( sv_cen_4 - sv_cen_5 ).norm() );
 
         /* assume extremum */
         sv_return = sv_d12;
 
         /* check extremum consistency */
+        if ( sv_return < sv_d13 ) sv_return = sv_d13;
+        if ( sv_return < sv_d14 ) sv_return = sv_d14;
+        if ( sv_return < sv_d15 ) sv_return = sv_d15;
         if ( sv_return < sv_d23 ) sv_return = sv_d23;
-        if ( sv_return < sv_d31 ) sv_return = sv_d31;
+        if ( sv_return < sv_d24 ) sv_return = sv_d24;
+        if ( sv_return < sv_d25 ) sv_return = sv_d25;
+        if ( sv_return < sv_d34 ) sv_return = sv_d34;
+        if ( sv_return < sv_d35 ) sv_return = sv_d35;
+        if ( sv_return < sv_d45 ) sv_return = sv_d45;
 
         /* return amplitude */
         return( sv_return );
@@ -669,13 +683,13 @@
         /* compute scene */
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5 );
 
-        return( 0 );
-
         /* compute filtering tolerence values */
         //sv_tol = sv_t12.norm() + sv_t23.norm();
-        sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3, sv_cen_4, sv_cen_5 );
         sv_max = sv_tol *  20.0;
         sv_tol = sv_tol / 150.0;
+
+        return( 0 );
 
         /* filter scene */
         sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
