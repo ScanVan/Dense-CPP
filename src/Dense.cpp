@@ -348,18 +348,24 @@
     source - matching methods
  */
 
-    void sv_dense_match( cv::Mat const & sv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3i > & sv_color ) {
+    void sv_dense_match( cv::Mat const & sv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_20_u, DImage const & sv_flow_20_v, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, DImage const & sv_flow_24_u, DImage const & sv_flow_24_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3d > & sv_mat_4, std::vector < Eigen::Vector3d > & sv_mat_5, std::vector < Eigen::Vector3i > & sv_color ) {
 
         /* parsing pointer variable */
+        double * sv_p_20_u( sv_flow_20_u.pData );
+        double * sv_p_20_v( sv_flow_20_v.pData );
         double * sv_p_21_u( sv_flow_21_u.pData );
         double * sv_p_21_v( sv_flow_21_v.pData );
         double * sv_p_23_u( sv_flow_23_u.pData );
         double * sv_p_23_v( sv_flow_23_v.pData );
+        double * sv_p_24_u( sv_flow_24_u.pData );
+        double * sv_p_24_v( sv_flow_24_v.pData );
 
         /* reset matches array */
         sv_mat_1.clear();
         sv_mat_2.clear();
         sv_mat_3.clear();
+        sv_mat_4.clear();
+        sv_mat_5.clear();
 
         /* color vector variable */
         Eigen::Vector3i sv_pixel;
@@ -374,13 +380,19 @@
                 if ( sv_mask.at <uchar> ( sv_y, sv_x ) != 0 ) {
 
                     /* compute and assign match elements */
-                    sv_mat_1.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_21_u ), sv_y + ( * sv_p_21_v ) ) );
+                    sv_mat_1.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_20_u ), sv_y + ( * sv_p_20_v ) ) );
 
                     /* compute and assign match elements */
-                    sv_mat_2.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x, sv_y ) );
+                    sv_mat_2.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_21_u ), sv_y + ( * sv_p_21_v ) ) );
 
                     /* compute and assign match elements */
-                    sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
+                    sv_mat_3.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x, sv_y ) );
+
+                    /* compute and assign match elements */
+                    sv_mat_4.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_23_u ), sv_y + ( * sv_p_23_v ) ) );
+
+                    /* compute and assign match elements */
+                    sv_mat_5.push_back( sv_dense_geometry_cartesian( sv_width, sv_height, sv_x + ( * sv_p_24_u ), sv_y + ( * sv_p_24_v ) ) );
 
                     /* compose color vector */
                     sv_pixel(0) = sv_image.at <cv::Vec3d> ( sv_y, sv_x )[2] * 255.0;
@@ -393,10 +405,14 @@
                 }
 
                 /* update pointers */
+                sv_p_20_u ++;
+                sv_p_20_v ++;
                 sv_p_21_u ++;
                 sv_p_21_v ++;
                 sv_p_23_u ++;
                 sv_p_23_v ++;
+                sv_p_24_u ++;
+                sv_p_24_v ++;
 
             }
 
@@ -620,10 +636,10 @@
 
     } /* parallel sections */
 
-        return( 0 );
-
         /* compute matches */
-        sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_color );
+        sv_dense_match( sv_img_middle, sv_mask, sv_img_width, sv_img_height, sv_flow_20_u, sv_flow_20_v, sv_flow_21_u, sv_flow_21_v, sv_flow_23_u, sv_flow_23_v, sv_flow_24_u, sv_flow_24_v, sv_mat_1, sv_mat_2, sv_mat_3, sv_mat_4, sv_mat_5, sv_color );
+
+        return( 0 );
 
         /* compute common frame - aligned on first camera */
         sv_dense_geometry_common( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3, sv_r12, sv_t12, sv_r23, sv_t23 );

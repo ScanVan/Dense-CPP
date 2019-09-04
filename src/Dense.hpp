@@ -115,7 +115,7 @@
 
     /* *** */
 
-    void sv_dense_match( cv::Mat const & cv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3i > & sv_color );
+    void sv_dense_match( cv::Mat const & sv_image, cv::Mat const & sv_mask, long const sv_width, long const sv_height, DImage const & sv_flow_20_u, DImage const & sv_flow_20_v, DImage const & sv_flow_21_u, DImage const & sv_flow_21_v, DImage const & sv_flow_23_u, DImage const & sv_flow_23_v, DImage const & sv_flow_24_u, DImage const & sv_flow_24_v, std::vector < Eigen::Vector3d > & sv_mat_1, std::vector < Eigen::Vector3d > & sv_mat_2, std::vector < Eigen::Vector3d > & sv_mat_3, std::vector < Eigen::Vector3d > & sv_mat_4, std::vector < Eigen::Vector3d > & sv_mat_5, std::vector < Eigen::Vector3i > & sv_color );
 
     /* *** */
 
