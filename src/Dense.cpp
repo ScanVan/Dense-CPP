@@ -673,10 +673,10 @@
 
     }
 
-    } /* parallel sections */
+    //} /* parallel sections */
 
-    # pragma omp parallel sections
-    {
+    //# pragma omp parallel sections
+    //{
 
     # pragma omp section
     {
