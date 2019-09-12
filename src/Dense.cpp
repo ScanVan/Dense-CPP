@@ -415,12 +415,17 @@
     source - filtering methods
  */
 
-    void sv_dense_filter( double const sv_tol, double const sv_max, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
+    void sv_dense_filter( double const sv_tol, double const sv_ang, std::vector < Eigen::Vector3d > const & sv_scene, std::vector < Eigen::Vector3i > const & sv_color, std::vector < Eigen::Vector3d > & sv_fscene, std::vector < Eigen::Vector3i > & sv_fcolor, std::vector < Eigen::Vector3d > const & sv_mat_1, std::vector < Eigen::Vector3d > const & sv_mat_2, std::vector < Eigen::Vector3d > const & sv_mat_3, Eigen::Vector3d const & sv_cen_1, Eigen::Vector3d const & sv_cen_2, Eigen::Vector3d const & sv_cen_3 ) {
 
         /* element radius variable */
         double sv_rad_1( 0.0 );
         double sv_rad_2( 0.0 );
         double sv_rad_3( 0.0 );
+
+        /* element angle variable */
+        double sv_ang_12( 0.0 );
+        double sv_ang_23( 0.0 );
+        double sv_ang_31( 0.0 );
 
         /* element disparity variable */
         double sv_disp_1( 0.0 );
@@ -440,13 +445,21 @@
             sv_disp_2 = ( sv_cen_2 + ( sv_rad_2 * sv_mat_2[sv_parse] ) - sv_scene[sv_parse] ).norm();
             sv_disp_3 = ( sv_cen_3 + ( sv_rad_3 * sv_mat_3[sv_parse] ) - sv_scene[sv_parse] ).norm();
 
+            /* compute element angle */
+            sv_ang_12 = acos( sv_mat_1[sv_parse].dot( sv_mat_2[sv_parse] ) );
+            sv_ang_23 = acos( sv_mat_2[sv_parse].dot( sv_mat_3[sv_parse] ) );
+            sv_ang_31 = acos( sv_mat_3[sv_parse].dot( sv_mat_1[sv_parse] ) );
+
             /* apply filtering condition */
             if ( sv_disp_1 <= sv_tol )
             if ( sv_disp_2 <= sv_tol )
             if ( sv_disp_3 <= sv_tol ) {
 
+            /* apply filtering condition */
+            if ( ( sv_ang_12 > sv_ang ) || ( sv_ang_23 > sv_ang ) || ( sv_ang_31 > sv_ang ) ) {
+
                 /* apply filtering condition */
-                if ( ( sv_rad_2 > 0.0 ) && ( sv_rad_2 < sv_max ) ) {
+                if ( sv_rad_2 > 0.0 ) {
 
                     /* element selection - position */
                     sv_fscene.push_back( sv_scene[sv_parse] );
@@ -455,6 +468,8 @@
                     sv_fcolor.push_back( sv_color[sv_parse] );
 
                 }
+
+            }
 
             }
 
@@ -513,7 +528,6 @@
 
         /* filtering variable */
         double sv_tol( 0.0 );
-        double sv_max( 0.0 );
 
         /* check consistency */
         if ( argc != 8 ) {
@@ -579,14 +593,11 @@
         /* compute scene */
         sv_scene = sv_dense_scene( sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
-        /* compute filtering tolerence values */
-        //sv_tol = sv_t12.norm() + sv_t23.norm();
-        sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3 );
-        sv_max = sv_tol *  20.0;
-        sv_tol = sv_tol / 150.0;
+        /* compute tolerance value */
+        sv_tol = sv_dense_geometry_amplitude( sv_cen_1, sv_cen_2, sv_cen_3 ) / 150.0;
 
         /* filter scene */
-        sv_dense_filter( sv_tol, sv_max, sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
+        sv_dense_filter( sv_tol, 1.0 * ( 3.1415926535 / 180.0 ), sv_scene, sv_color, sv_fscene, sv_fcolor, sv_mat_1, sv_mat_2, sv_mat_3, sv_cen_1, sv_cen_2, sv_cen_3 );
 
         /* export computed scene */
         sv_dense_io_scene( argv[5], sv_fscene, sv_fcolor );
