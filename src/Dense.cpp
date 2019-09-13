@@ -432,6 +432,10 @@
         double sv_disp_2( 0.0 );
         double sv_disp_3( 0.0 );
 
+        double sv_norm_1( 0.0 );
+        double sv_norm_2( 0.0 );
+        double sv_norm_3( 0.0 );
+
         /* parsing scene elements */
         for ( long sv_parse( 0 ); sv_parse < sv_scene.size(); sv_parse ++ ) {
 
@@ -445,10 +449,15 @@
             sv_disp_2 = ( sv_cen_2 + ( sv_rad_2 * sv_mat_2[sv_parse] ) - sv_scene[sv_parse] ).norm();
             sv_disp_3 = ( sv_cen_3 + ( sv_rad_3 * sv_mat_3[sv_parse] ) - sv_scene[sv_parse] ).norm();
 
+            /* compute norms */
+            sv_norm_1 = sv_mat_1[sv_parse].norm();
+            sv_norm_2 = sv_mat_2[sv_parse].norm();
+            sv_norm_3 = sv_mat_3[sv_parse].norm();
+
             /* compute element angle */
-            sv_ang_12 = acos( sv_mat_1[sv_parse].dot( sv_mat_2[sv_parse] ) );
-            sv_ang_23 = acos( sv_mat_2[sv_parse].dot( sv_mat_3[sv_parse] ) );
-            sv_ang_31 = acos( sv_mat_3[sv_parse].dot( sv_mat_1[sv_parse] ) );
+            sv_ang_12 = acos( sv_mat_1[sv_parse].dot( sv_mat_2[sv_parse] ) / ( sv_norm_1 * sv_norm_2 ) );
+            sv_ang_23 = acos( sv_mat_2[sv_parse].dot( sv_mat_3[sv_parse] ) / ( sv_norm_2 * sv_norm_3 ) );
+            sv_ang_31 = acos( sv_mat_3[sv_parse].dot( sv_mat_1[sv_parse] ) / ( sv_norm_3 * sv_norm_1 ) );
 
             /* apply filtering condition */
             if ( sv_disp_1 <= sv_tol )
